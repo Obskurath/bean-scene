@@ -1,0 +1,62 @@
+---
+import Button from "./Button.astro";
+
+type NavLink = {
+  href: string;
+  label: string;
+};
+
+type Props = {
+  title?: string;
+  href?: string;
+  links?: NavLink[];
+  class?: string;
+};
+
+const {
+  title = "Bean Scene",
+  href = "/",
+  links = [
+    { href: "/", label: "Home" },
+    { href: "/menu", label: "Menu" },
+    { href: "/about", label: "About Us" },
+    { href: "/contact", label: "Contact Us" },
+  ],
+  class: className = "",
+} = Astro.props as Props;
+---
+
+<header class={`absolute top-0 z-50 w-full \\ ${className}`}>
+  <div
+    class="grid w-full grid-cols-[auto_1fr_auto] items-center px-6 py-4 sm:px-10 lg:px-16"
+  >
+    <a href={href} class="shrink-0 text-[35px] text-white font-script">
+      {title}
+    </a>
+
+    <div class="flex items-center justify-center px-4">
+      <nav aria-label="Primary" class="flex items-center gap-16">
+        {
+          links.map((link) => (
+            <a
+              href={link.href}
+              class="text-sm text-slate-300 transition-colors hover:text-white font-heading"
+            >
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div class="flex shrink-0 items-center gap-7 justify-self-end">
+      <a
+        href="/sign-in"
+        class="text-sm text-slate-300 transition-colors hover:text-white font-heading"
+      >
+        Sign In
+      </a>
+      <Button href="/sign-up" width="100px" height="48px"> Sign Up </Button>
+    </div>
+  </div>
+</header>

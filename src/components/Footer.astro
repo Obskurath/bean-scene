@@ -1,0 +1,32 @@
+---
+type Props = {
+  title?: string;
+  class?: string;
+};
+
+const { title = "Bean Scene", class: className = "" } = Astro.props as Props;
+---
+
+<footer class={`w-full border-t border-white/10 bg-slate-950/95 ${className}`}>
+  <div
+    class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 py-5 sm:px-10 lg:px-16"
+  >
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-[28px] leading-none text-white font-script">{title}</p>
+
+      <p class="text-xs text-slate-400 font-heading">
+        <span class="text-[#F9C06A]">Bean Scene</span> coffee experience.
+      </p>
+    </div>
+
+    <div
+      class="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3 text-[11px] uppercase tracking-[0.25em] text-slate-500 font-heading"
+    >
+      <span>Freshly brewed</span>
+      <span class="text-[#F9C06A]">•</span>
+      <span>Warm atmosphere</span>
+      <span class="text-[#F9C06A]">•</span>
+      <span>Crafted daily</span>
+    </div>
+  </div>
+</footer>

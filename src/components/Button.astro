@@ -1,0 +1,39 @@
+---
+type Props = {
+  href?: string;
+  type?: "button" | "submit" | "reset";
+  width?: string;
+  height?: string;
+  class?: string;
+};
+
+const {
+  href,
+  type = "button",
+  width,
+  height,
+  class: className = "",
+} = Astro.props as Props;
+
+const baseStyles =
+  "btn-color inline-flex items-center justify-center rounded-[24px] px-4 py-2 text-sm font-medium text-slate-950 transition-opacity hover:opacity-90 font-heading";
+
+const style = [
+  width ? `width: ${width};` : "",
+  height ? `height: ${height};` : "",
+]
+  .filter(Boolean)
+  .join(" ");
+---
+
+{
+  href ? (
+    <a href={href} class={`${baseStyles} ${className}`} style={style}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class={`${baseStyles} ${className}`} style={style}>
+      <slot />
+    </button>
+  )
+}
