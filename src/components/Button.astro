@@ -4,6 +4,7 @@ type Props = {
   type?: "button" | "submit" | "reset";
   width?: string;
   height?: string;
+  fontWeight?: string;
   class?: string;
 };
 
@@ -12,15 +13,17 @@ const {
   type = "button",
   width,
   height,
+  fontWeight,
   class: className = "",
 } = Astro.props as Props;
 
 const baseStyles =
-  "btn-color inline-flex items-center justify-center rounded-[24px] px-4 py-2 text-sm font-medium text-slate-950 transition-opacity hover:opacity-90 font-heading";
+  "btn-color inline-flex items-center justify-center rounded-[24px] px-4 py-[6px] text-sm text-slate-950 transition-opacity hover:opacity-90 font-heading";
 
 const style = [
   width ? `width: ${width};` : "",
   height ? `height: ${height};` : "",
+  fontWeight ? `font-weight: ${fontWeight};` : "",
 ]
   .filter(Boolean)
   .join(" ");

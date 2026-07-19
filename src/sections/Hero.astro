@@ -11,12 +11,21 @@ import Button from "@components/Button.astro";
   <div
     class="absolute inset-0 bg-linear-to-r from-black/65 via-black/30 to-black/0"
   >
-    <p>We,ve got your morning covered with</p>
-    <h1>Coffee</h1>
-    <p>
-      It is best to start your day with a cup of coffee you will ever have, We
-      provide the best for our customers.
-    </p>
-    <Button href="/order" width="134px" height="48px">Order Now</Button>
+    <div class="container max-w-[550px] flex flex-col mt-44 ml-16">
+      <p class="text-[22px] font-extralight">
+        We,ve got your morning covered with
+      </p>
+      <div class="flex flex-col gap-6 font-heading-light">
+        <h class="text-[220px] font-script leading-tight">Coffee</h>
+        <p class="text-[20px] font-extralight">
+          It is best to start your day with a cup of coffee. Discover the best
+          flavours coffee you will ever have. We provide the best for our
+          customers.
+        </p>
+        <Button href="/order" width="134px" height="48px" fontWeight="700"
+          >Order Now</Button
+        >
+      </div>
+    </div>
   </div>
 </main>

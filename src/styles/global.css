@@ -1,35 +1,40 @@
 @import "tailwindcss";
 
 @font-face {
-	font-family: "Playfair Display";
-	src: url("/fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf") format("truetype");
-	font-style: normal;
-	font-weight: 400 900;
-	font-display: swap;
+    font-family: "Playfair Display";
+    src: url("/fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 200 400 900;
+    font-display: swap;
 }
 
 @font-face {
-	font-family: "Clicker Script";
-	src: url("/fonts/Clicker_Script/ClickerScript-Regular.ttf") format("truetype");
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
+    font-family: "Clicker Script";
+    src: url("/fonts/Clicker_Script/ClickerScript-Regular.ttf") format("truetype");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
 }
 
 :root {
-	--btn-color: #F9C06A;
-	--font-heading: "Playfair Display", serif;
-	--font-script: "Clicker Script", cursive;
+    --btn-color: #F9C06A;
+    --font-heading: "Playfair Display", serif;
+    --font-script: "Clicker Script", cursive;
+}
+
+body {
+    color: #ffffff;
+    font-family: var(--font-heading);
 }
 
 .btn-color {
-	background-color: var(--btn-color);
+    background-color: var(--btn-color);
 }
 
 .font-heading {
-	font-family: var(--font-heading);
+    font-family: var(--font-heading);
 }
 
 .font-script {
-	font-family: var(--font-script);
+    font-family: var(--font-script);
 }
