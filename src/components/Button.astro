@@ -12,17 +12,15 @@ const {
   href,
   type = "button",
   width,
-  height,
   fontWeight,
   class: className = "",
 } = Astro.props as Props;
 
 const baseStyles =
-  "btn-color inline-flex items-center justify-center rounded-[24px] px-4 py-[6px] text-sm text-slate-950 transition duration-200 ease-out hover:brightness-102 hover:shadow-[0_8px_16px_rgba(249,192,106,0.22)] font-heading shadow-md";
+  "btn-color inline-flex items-center justify-center rounded-[24px] h-[48px] w-fit px-4 py-[6px] text-sm text-slate-950 transition duration-200 ease-out hover:brightness-102 hover:shadow-[0_8px_16px_rgba(249,192,106,0.22)] font-heading shadow-md cursor-pointer";
 
 const style = [
   width ? `width: ${width};` : "",
-  height ? `height: ${height};` : "",
   fontWeight ? `font-weight: ${fontWeight};` : "",
 ]
   .filter(Boolean)
