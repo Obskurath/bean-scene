@@ -1,0 +1,54 @@
+---
+import ProductCard from "@components/ProductCard.astro";
+import capuccinoImg from "@assets/capuccino.png";
+import chaiLatteImg from "@assets/chai-latte.png";
+import macchiatoImg from "@assets/macchiato.png";
+import expressoImg from "@assets/expresso.png";
+
+const productsData = [
+  {
+    id: "1",
+    name: "Cappuccino",
+    description: "Coffee 50% | Milk 50%",
+    price: 8.5,
+    image: capuccinoImg,
+  },
+  {
+    id: "2",
+    name: "Chai Latte",
+    description: "Coffee 50% | Milk 50%",
+    price: 8.5,
+    image: chaiLatteImg,
+  },
+  {
+    id: "3",
+    name: "Macchiato",
+    description: "Coffee 50% | Milk 50%",
+    price: 8.5,
+    image: macchiatoImg,
+  },
+  {
+    id: "4",
+    name: "Expresso",
+    description: "Coffee 50% | Milk 50%",
+    price: 8.5,
+    image: expressoImg,
+  },
+];
+---
+
+<section class="max-w-6xl mx-auto px-4 py-16 flex flex-col items-center">
+  <div class="text-center mb-12">
+    <h2 class="text-4xl md:text-5xl font-bold text-[#4A2B14] font-serif mb-4">
+      Enjoy a new blend of coffee style
+    </h2>
+    <p class="text-gray-500 text-lg max-w-2xl mx-auto">
+      Explore all flavours of coffee with us. There is always a new cup worth
+      experiencing
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+    {productsData.map((product) => <ProductCard product={product} />)}
+  </div>
+</section>

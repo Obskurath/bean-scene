@@ -1,0 +1,53 @@
+---
+import { Image } from "astro:assets";
+import Button from "./Button.astro";
+import type { ImageMetadata } from "astro";
+
+export interface Props {
+  product: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    image: ImageMetadata;
+  };
+}
+
+const { product } = Astro.props;
+
+const formattedPrice = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+}).format(product.price);
+---
+
+<article
+  class="bg-[#FFF9F1] border border-gray-200 overflow-hidden flex flex-col items-center text-center"
+>
+  <div class="w-full h-48 sm:h-56">
+    <Image
+      src={product.image}
+      alt={`Imagen de ${product.name}`}
+      width={400}
+      height={320}
+      class="w-full h-full object-cover"
+    />
+  </div>
+
+  <div class="p-6 flex flex-col items-center w-full">
+    <h3 class="text-xl font-bold text-[#4A2B14] mb-1 font-serif">
+      {product.name}
+    </h3>
+
+    <p class="text-gray-600 text-sm mb-3">
+      {product.description}
+    </p>
+
+    <span class="text-lg font-bold text-[#4A2B14] mb-4">
+      {formattedPrice}
+    </span>
+
+    <Button> Order Now </Button>
+  </div>
+</article>
