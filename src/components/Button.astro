@@ -3,7 +3,6 @@ type Props = {
   href?: string;
   type?: "button" | "submit" | "reset";
   width?: string;
-  height?: string;
   fontWeight?: string;
   class?: string;
 };
@@ -18,22 +17,23 @@ const {
 
 const baseStyles =
   "btn-color inline-flex items-center justify-center rounded-[24px] h-[48px] w-fit px-4 py-[6px] text-sm text-slate-950 transition duration-200 ease-out hover:brightness-102 hover:shadow-[0_8px_16px_rgba(249,192,106,0.22)] font-heading shadow-md cursor-pointer";
-
-const style = [
-  width ? `width: ${width};` : "",
-  fontWeight ? `font-weight: ${fontWeight};` : "",
-]
-  .filter(Boolean)
-  .join(" ");
 ---
 
 {
   href ? (
-    <a href={href} class={`${baseStyles} ${className}`} style={style}>
+    <a
+      href={href}
+      class:list={[baseStyles, className]}
+      style={{ width: width, fontWeight: fontWeight }}
+    >
       <slot />
     </a>
   ) : (
-    <button type={type} class={`${baseStyles} ${className}`} style={style}>
+    <button
+      type={type}
+      class:list={[baseStyles, className]}
+      style={{ width: width, fontWeight: fontWeight }}
+    >
       <slot />
     </button>
   )

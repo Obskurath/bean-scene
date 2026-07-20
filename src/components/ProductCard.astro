@@ -23,20 +23,18 @@ const formattedPrice = new Intl.NumberFormat("en-US", {
 ---
 
 <article
-  class="bg-[#FFF9F1] border border-gray-200 overflow-hidden flex flex-col items-center text-center"
+  class="bg-(--filler-color) border border-(--border-color) overflow-hidden flex flex-col items-center text-center rounded-2xl"
 >
-  <div class="w-full h-48 sm:h-56">
+  <div class="w-full aspect-280/222">
     <Image
       src={product.image}
       alt={`Imagen de ${product.name}`}
-      width={400}
-      height={320}
-      class="w-full h-full object-cover"
+      class="w-full h-full object-cover rounded-b-sm"
     />
   </div>
 
   <div class="p-6 flex flex-col items-center w-full">
-    <h3 class="text-xl font-bold text-[#4A2B14] mb-1 font-serif">
+    <h3 class="text-xl font-bold text-(--header-color) mb-1 font-serif">
       {product.name}
     </h3>
 
@@ -44,10 +42,10 @@ const formattedPrice = new Intl.NumberFormat("en-US", {
       {product.description}
     </p>
 
-    <span class="text-lg font-bold text-[#4A2B14] mb-4">
+    <span class="text-lg font-bold text-(--header-color) mb-4">
       {formattedPrice}
     </span>
 
-    <Button> Order Now </Button>
+    <Button fontWeight="500"> Order Now </Button>
   </div>
 </article>

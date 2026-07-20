@@ -22,6 +22,8 @@
     --font-script: "Clicker Script", cursive;
     --header-color: #603809;
     --text-color: #707070;
+    --border-color: #F9C06A;
+    --filler-color: #FFF9F1;
 }
 
 body {
