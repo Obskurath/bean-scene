@@ -1,24 +1,62 @@
 ---
+import Card from "@components/Card.astro";
+import beans from "@assets/coffee-beans.svg";
+import badge from "@assets/badge.svg";
+import coffee from "@assets/coffee-cup.svg";
+import price from "@assets/best-price.svg";
+import Button from "@components/Button.astro";
 
+const contentData = [
+  {
+    id: "1",
+    title: "Supreme Beans",
+    description: "Beans that provides great taste",
+    icon: beans,
+  },
+  {
+    id: "2",
+    title: "High Quality",
+    description: "We provide the highest quality",
+    icon: badge,
+  },
+  {
+    id: "3",
+    title: "Extraordinary",
+    description: "Coffee like you have never tasted",
+    icon: coffee,
+  },
+  {
+    id: "4",
+    title: "Affordable Price",
+    description: "Our Coffee prices are easy to afford",
+    icon: price,
+  },
+];
 ---
 
 <section
   class="max-w-6xl mx-auto px-4 py-16 flex flex-col items-center"
-  id="Menu"
+  id="About"
 >
   <div class="text-center mb-12">
-    <h2
-      class="text-4xl md:text-5xl font-bold text-(--header-color) font-serif mb-4"
-    >
-      Enjoy a new blend of coffee style
+    <h2 class="text-4xl md:text-5xl font-bold text-(--header-color) mb-4">
+      Why are we different?
     </h2>
     <p class="text-(--text-color) text-lg max-w-2xl mx-auto">
-      Explore all flavours of coffee with us. There is always a new cup worth
-      experiencing
+      We don't just make your coffee, we make your day!
     </p>
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-    {productsData.map((product) => <ProductCard product={product} />)}
+    {contentData.map((item) => <Card content={item} />)}
   </div>
+  <p
+    class="text-(--text-color) text-lg max-w-2xl mx-auto mt-10 mb-1 text-[20px]"
+  >
+    Great ideas start with great coffee. Lets help you achieve that
+  </p>
+  <h3 class="text-[30px] font-bold text-(--header-color) mb-4">
+    Get started today.
+  </h3>
+  <Button fontWeight="500">Join Us</Button>
 </section>

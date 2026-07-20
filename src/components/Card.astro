@@ -1,0 +1,38 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+export interface Props {
+  content: {
+    id: string;
+    title: string;
+    description: string;
+    icon: ImageMetadata;
+  };
+}
+
+const { content } = Astro.props;
+---
+
+<article
+  class="bg-(--filler-color) border border-(--border-color) flex flex-col items-center text-center px-4 py-14 rounded-2xl"
+>
+  <!-- Contenedor ajustado para íconos SVG -->
+  <div class="w-16 h-16 mb-4">
+    <Image
+      src={content.icon}
+      alt={`Icono de ${content.title}`}
+      class="w-full h-full object-contain"
+    />
+  </div>
+
+  <div class="flex flex-col items-center w-full">
+    <h3 class="text-xl font-bold text-(--header-color) mb-2 text-[28px]">
+      {content.title}
+    </h3>
+
+    <p class="text-(--text-color) text-[20px] px-4">
+      {content.description}
+    </p>
+  </div>
+</article>
