@@ -2,6 +2,10 @@
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
+
+const { title = "Bean Scene", hideHeaderFooter } = Astro.props;
+const shouldHideHeaderFooter =
+  hideHeaderFooter ?? Astro.url.pathname === "/login";
 ---
 
 <!doctype html>
@@ -11,11 +15,11 @@ import "../styles/global.css";
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" href="/icon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>Bean Scene</title>
+    <title>{title}</title>
   </head>
   <body>
-    <Header />
+    {shouldHideHeaderFooter ? null : <Header />}
     <slot />
-    <Footer />
+    {shouldHideHeaderFooter ? null : <Footer />}
   </body>
 </html>

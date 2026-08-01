@@ -1,0 +1,169 @@
+---
+import Layout from "../layouts/Layout.astro";
+import coffeeImage from "../assets/coffee_image.png";
+import Button from "../components/Button.astro";
+---
+
+<Layout title="Sign In | Bean Scene" hideHeaderFooter={true}>
+  <main class="min-h-screen bg-(--filler-color) px-4 py-8 sm:px-6 lg:px-8">
+    <div
+      class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center justify-center"
+    >
+      <div
+        class="grid w-full overflow-hidden rounded-4xl border border-(--border-color)/40 bg-white shadow-[0_25px_80px_rgba(96,56,9,0.16)] lg:grid-cols-[1.05fr_0.95fr]"
+      >
+        <section class="relative hidden lg:block">
+          <img
+            src={coffeeImage.src}
+            alt="Bean Scene Coffee"
+            class="h-full w-full object-cover"
+          />
+          <div
+            class="absolute inset-0 bg-linear-to-r from-black/75 via-black/20 to-transparent"
+          >
+          </div>
+          <div
+            class="absolute inset-0 flex flex-col justify-end p-10 text-white"
+          >
+            <p class="font-script text-4xl">Bean Scene</p>
+            <h2 class="mt-2 max-w-sm text-3xl font-semibold leading-tight">
+              A coffee that accompanies your day
+            </h2>
+            <p class="mt-3 max-w-sm text-sm leading-6 text-white/80">
+              Enjoy a warm, elegant, and flavorful experience from the very
+              first sip.
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="flex items-center justify-center bg-(--filler-color) p-8 sm:p-10 lg:p-12"
+        >
+          <div class="w-full max-w-md">
+            <div class="mb-8 text-center">
+              <div
+                class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-(--border-color)]/60 bg-white shadow-sm"
+              >
+                <span class="font-script text-3xl text-(--header-color)">B</span
+                >
+              </div>
+              <h1 class="font-script text-4xl text-(--header-color)">
+                Welcome back
+              </h1>
+              <p class="mt-2 text-sm leading-6 text-(--text-color)">
+                Sign in to enjoy your benefits and keep up with your favorite
+                routine.
+              </p>
+            </div>
+
+            <form id="login-form" class="space-y-5">
+              <div>
+                <label
+                  for="email"
+                  class="mb-2 block text-sm font-semibold text-(--header-color)"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  class="block w-full rounded-full border border-(--border-color)/50 bg-white px-4 py-3 text-(--header-color) shadow-sm outline-none transition focus:border-(--btn-color) focus:ring-2 focus:ring-(--btn-color)/40"
+                  placeholder="you@email.com"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="password"
+                  class="mb-2 block text-sm font-semibold text-(--header-color)"
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  required
+                  class="block w-full rounded-full border border-(--border-color)/50 bg-white px-4 py-3 text-(--header-color) shadow-sm outline-none transition focus:border-(--btn-color) focus:ring-2 focus:ring-(--btn-color)/40"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <label class="flex items-center gap-2 text-(--text-color)">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-(--border-color)/60 text-(--btn-color) focus:ring-(--btn-color)"
+                  />
+                  Remember me
+                </label>
+                <a
+                  href="/forgot-password"
+                  class="font-medium text-(--header-color) transition hover:text-(--btn-color)"
+                >
+                  Forgot your password?
+                </a>
+              </div>
+
+              <Button type="submit" width="100%" class="w-full">
+                SIGN IN
+              </Button>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-(--text-color)">
+              Don't have an account?
+              <a
+                href="/sign-up"
+                class="ml-1 font-semibold text-(--header-color) transition hover:text-(--btn-color)"
+              >
+                Sign up here
+              </a>
+            </div>
+
+            <div
+              id="error-message"
+              class="mt-4 hidden rounded-2xl border border-red-200 bg-red-50 px-3 py-3 text-center text-sm text-red-700"
+            >
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { supabase } from "../lib/supabase";
+
+  const form = document.getElementById("login-form") as HTMLFormElement;
+  const errorMessage = document.getElementById("error-message");
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMessage?.classList.add("hidden");
+
+    const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      if (errorMessage) {
+        errorMessage.textContent = "Error: " + error.message;
+        errorMessage.classList.remove("hidden");
+      }
+      console.error("Login error:", error.message);
+    } else {
+      console.log("User logged in:", data.user);
+      window.location.href = "/dashboard";
+    }
+  });
+</script>
