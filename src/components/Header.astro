@@ -28,14 +28,12 @@ const {
 ---
 
 <header class={`absolute top-0 z-50 w-full py-2 ${className}`}>
-  <div
-    class="grid w-full grid-cols-[auto_1fr_auto] items-center px-6 py-4 sm:px-10 lg:px-16"
-  >
+  <div class="relative flex w-full items-center px-6 py-4 sm:px-10 lg:px-16">
     <a href={href} class="shrink-0 text-[35px] text-white font-script">
       {title}
     </a>
 
-    <div class="flex items-center justify-center px-4">
+    <div class="flex flex-1 items-center justify-center">
       <nav aria-label="Primary" class="flex items-center gap-16">
         {
           links.map((link) => (
@@ -50,7 +48,7 @@ const {
       </nav>
     </div>
 
-    <div class="flex shrink-0 items-center gap-7 justify-self-end">
+    <div class="flex w-44 shrink-0 items-center justify-end gap-4">
       <div id="auth-actions" class="flex items-center gap-3">
         <a
           href="/sign-in"
@@ -58,7 +56,7 @@ const {
         >
           Sign In
         </a>
-        <Button href="/sign-up"> Sign Up </Button>
+        <Button href="/sign-up" class="h-10 px-4 text-sm"> Sign Up </Button>
       </div>
 
       <div id="user-menu-wrapper" class="relative hidden">

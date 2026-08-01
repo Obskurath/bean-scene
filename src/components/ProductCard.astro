@@ -9,7 +9,7 @@ export interface Props {
     name: string;
     description: string;
     price: number;
-    image: ImageMetadata;
+    image: string | ImageMetadata;
   };
 }
 
@@ -26,11 +26,25 @@ const formattedPrice = new Intl.NumberFormat("en-US", {
   class="bg-(--filler-color) border border-(--border-color) overflow-hidden flex flex-col items-center text-center rounded-2xl"
 >
   <div class="w-full aspect-280/222">
-    <Image
-      src={product.image}
-      alt={`Imagen de ${product.name}`}
-      class="w-full h-full object-cover rounded-b-sm"
-    />
+    {
+      typeof product.image === "string" ? (
+        <img
+          src={product.image}
+          alt={`Imagen de ${product.name}`}
+          width="280"
+          height="222"
+          class="w-full h-full object-cover rounded-b-sm"
+        />
+      ) : (
+        <Image
+          src={product.image}
+          alt={`Imagen de ${product.name}`}
+          width={280}
+          height={222}
+          class="w-full h-full object-cover rounded-b-sm"
+        />
+      )
+    }
   </div>
 
   <div class="p-6 flex flex-col items-center w-full">

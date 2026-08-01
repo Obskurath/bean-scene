@@ -1,40 +1,22 @@
 ---
 import ProductCard from "@components/ProductCard.astro";
-import capuccinoImg from "@assets/capuccino.png";
-import chaiLatteImg from "@assets/chai-latte.png";
-import macchiatoImg from "@assets/macchiato.png";
-import expressoImg from "@assets/expresso.png";
+import { supabase } from "../lib/supabase";
 
-const productsData = [
-  {
-    id: "1",
-    name: "Cappuccino",
-    description: "Coffee 50% | Milk 50%",
-    price: 8.5,
-    image: capuccinoImg,
-  },
-  {
-    id: "2",
-    name: "Chai Latte",
-    description: "Coffee 50% | Milk 50%",
-    price: 8.5,
-    image: chaiLatteImg,
-  },
-  {
-    id: "3",
-    name: "Macchiato",
-    description: "Coffee 50% | Milk 50%",
-    price: 8.5,
-    image: macchiatoImg,
-  },
-  {
-    id: "4",
-    name: "Expresso",
-    description: "Coffee 50% | Milk 50%",
-    price: 8.5,
-    image: expressoImg,
-  },
-];
+const { data: productsSupabase, error } = await supabase
+  .from("productos")
+  .select("*");
+
+if (error) {
+  console.error("Error loading products from Supabase:", error.message);
+}
+
+const productsData = (productsSupabase || []).map((item) => ({
+  id: item.id,
+  name: item.nombre,
+  description: item.descripcion,
+  price: Number(item.precio),
+  image: item.imagen_url,
+}));
 ---
 
 <section
