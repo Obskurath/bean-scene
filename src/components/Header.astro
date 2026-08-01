@@ -1,5 +1,6 @@
 ---
 import Button from "./Button.astro";
+import { supabase } from "../lib/supabase";
 
 type NavLink = {
   href: string;
@@ -50,13 +51,121 @@ const {
     </div>
 
     <div class="flex shrink-0 items-center gap-7 justify-self-end">
-      <a
-        href="/sign-in"
-        class="text-sm text-slate-300 transition-colors hover:text-white font-heading"
-      >
-        Sign In
-      </a>
-      <Button href="/sign-up"> Sign Up </Button>
+      <div id="auth-actions" class="flex items-center gap-3">
+        <a
+          href="/sign-in"
+          class="text-sm text-slate-300 transition-colors hover:text-white font-heading"
+        >
+          Sign In
+        </a>
+        <Button href="/sign-up"> Sign Up </Button>
+      </div>
+
+      <div id="user-menu-wrapper" class="relative hidden">
+        <button
+          id="user-menu-button"
+          type="button"
+          class="btn-color inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-(--btn-color) text-lg font-semibold text-slate-950 shadow-md transition duration-200 ease-out hover:brightness-102 hover:shadow-[0_8px_16px_rgba(249,192,106,0.22)]"
+          aria-label="Open user menu"
+        >
+          <span id="user-initial">U</span>
+        </button>
+
+        <div
+          id="user-menu"
+          class="absolute right-0 mt-2 hidden w-44 rounded-2xl border border-(--border-color)/40 bg-white p-2 shadow-xl"
+        >
+          <button
+            id="sign-out-button"
+            type="button"
+            class="block w-full rounded-xl px-3 py-2 text-left text-sm text-(--header-color) transition hover:bg-(--filler-color)"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
+
+<script>
+  import { supabase } from "../lib/supabase";
+
+  const authActions = document.getElementById("auth-actions");
+  const userMenuWrapper = document.getElementById("user-menu-wrapper");
+  const userMenu = document.getElementById("user-menu");
+  const userMenuButton = document.getElementById("user-menu-button");
+  const userInitial = document.getElementById("user-initial");
+  const signOutButton = document.getElementById("sign-out-button");
+
+  type UserLike =
+    | {
+        user_metadata?: { full_name?: string } | undefined;
+        email?: string | undefined;
+      }
+    | null
+    | undefined;
+
+  type SessionLike = {
+    user?: UserLike;
+  } | null;
+
+  const setLoggedOutUI = () => {
+    authActions?.classList.remove("hidden");
+    userMenuWrapper?.classList.add("hidden");
+    userMenu?.classList.add("hidden");
+  };
+
+  const setLoggedInUI = (user: UserLike) => {
+    const fullName = user?.user_metadata?.full_name || user?.email || "User";
+    const initial = fullName.charAt(0).toUpperCase();
+
+    authActions?.classList.add("hidden");
+    userMenuWrapper?.classList.remove("hidden");
+    if (userInitial) {
+      userInitial.textContent = initial;
+    }
+  };
+
+  const syncAuthUI = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      setLoggedInUI(session.user);
+    } else {
+      setLoggedOutUI();
+    }
+  };
+
+  userMenuButton?.addEventListener("click", () => {
+    userMenu?.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (
+      target instanceof Node &&
+      !userMenuButton?.contains(target) &&
+      !userMenu?.contains(target)
+    ) {
+      userMenu?.classList.add("hidden");
+    }
+  });
+
+  signOutButton?.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  });
+
+  supabase.auth.onAuthStateChange((_event: string, session: SessionLike) => {
+    if (session?.user) {
+      setLoggedInUI(session.user);
+    } else {
+      setLoggedOutUI();
+    }
+  });
+
+  syncAuthUI();
+</script>

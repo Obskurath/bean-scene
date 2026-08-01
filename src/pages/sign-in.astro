@@ -150,20 +150,40 @@ import Button from "../components/Button.astro";
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+    const hasAt = email.includes("@");
+    const hasDotAfterAt =
+      email.indexOf("@") > -1 && email.lastIndexOf(".") > email.indexOf("@");
+    if (!hasAt || !hasDotAfterAt) {
+      if (errorMessage) {
+        errorMessage.textContent = "Please enter a valid email address.";
+        errorMessage.classList.remove("hidden");
+      }
+      return;
+    }
+
+    const rememberMe = (formData.get("remember-me") as string | null) === "on";
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
+      options: {
+        persistSession: rememberMe,
+      },
     });
 
     if (error) {
       if (errorMessage) {
-        errorMessage.textContent = "Error: " + error.message;
+        const message =
+          error.message === "Invalid login credentials"
+            ? "Invalid email or password. Please try again."
+            : error.message;
+        errorMessage.textContent = message;
         errorMessage.classList.remove("hidden");
       }
       console.error("Login error:", error.message);
     } else {
       console.log("User logged in:", data.user);
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     }
   });
 </script>
