@@ -88,6 +88,7 @@ const {
 
 <script>
   import { supabase } from "../lib/supabase";
+  import Swal from "sweetalert2";
 
   const authActions = document.getElementById("auth-actions");
   const userMenuWrapper = document.getElementById("user-menu-wrapper");
@@ -95,6 +96,9 @@ const {
   const userMenuButton = document.getElementById("user-menu-button");
   const userInitial = document.getElementById("user-initial");
   const signOutButton = document.getElementById("sign-out-button");
+
+  // Bandera para bloquear cambios de UI mientras corre la alerta de salida
+  let isLoggingOut = false;
 
   type UserLike =
     | {
@@ -109,12 +113,14 @@ const {
   } | null;
 
   const setLoggedOutUI = () => {
+    if (isLoggingOut) return; // Si estamos cerrando sesión, ignoramos esto hasta que termine el alert
     authActions?.classList.remove("hidden");
     userMenuWrapper?.classList.add("hidden");
     userMenu?.classList.add("hidden");
   };
 
   const setLoggedInUI = (user: UserLike) => {
+    if (isLoggingOut) return; // Si estamos cerrando sesión, evitamos actualizar la interfaz
     const fullName = user?.user_metadata?.full_name || user?.email || "User";
     const initial = fullName.charAt(0).toUpperCase();
 
@@ -153,8 +159,42 @@ const {
   });
 
   signOutButton?.addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    userMenu?.classList.add("hidden");
+    isLoggingOut = true; // Activamos el bloqueo para que la interfaz no cambie de golpe
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      isLoggingOut = false; // Desactivamos el bloqueo si hubo error
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: error.message,
+        confirmButtonColor: "var(--btn-color)",
+        background: "var(--filler-color)",
+        color: "var(--text-color)",
+        customClass: {
+          popup: "border border-[var(--border-color)] rounded-3xl shadow-xl",
+          confirmButton:
+            "rounded-full px-6 py-2.5 font-semibold text-[var(--header-color)] tracking-wider !bg-[var(--btn-color)]",
+        },
+      });
+    } else {
+      Swal.fire({
+        icon: "success",
+        title: "See you soon!",
+        text: "You have been logged out successfully.",
+        timer: 2200,
+        showConfirmButton: false,
+        background: "var(--filler-color)",
+        color: "var(--header-color)",
+        customClass: {
+          popup: "border border-[var(--border-color)] rounded-3xl shadow-xl",
+        },
+      }).then(() => {
+        window.location.href = "/";
+      });
+    }
   });
 
   supabase.auth.onAuthStateChange((_event: string, session: SessionLike) => {
