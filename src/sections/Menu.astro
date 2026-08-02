@@ -1,22 +1,8 @@
 ---
 import ProductCard from "@components/ProductCard.astro";
-import { supabase } from "../lib/supabase";
+import { getProducts } from "../lib/products";
 
-const { data: productsSupabase, error } = await supabase
-  .from("products")
-  .select("*");
-
-if (error) {
-  console.error("Error loading products from Supabase:", error.message);
-}
-
-const productsData = (productsSupabase || []).map((item) => ({
-  id: item.id,
-  name: item.nombre,
-  description: item.descripcion,
-  price: Number(item.precio),
-  image: item.imagen_url,
-}));
+const productsData = await getProducts();
 ---
 
 <section

@@ -1,0 +1,118 @@
+---
+import Layout from "../layouts/Layout.astro"; // O tu layout principal
+---
+
+<Layout title="Your Cart - Bean Scene">
+  <main class="max-w-4xl mx-auto px-4 py-16">
+    <h1
+      class="text-3xl font-bold text-(--header-color) mb-8 text-center font-serif"
+    >
+      Your Shopping Cart
+    </h1>
+
+    <!-- Contenedor dinámico del carrito -->
+    <div id="cart-container" class="space-y-6">
+      <!-- Se llenará con JavaScript mediante Nanostores -->
+      <p class="text-center text-gray-500 py-8">Loading cart...</p>
+    </div>
+
+    <!-- Sección de resumen y pago -->
+    <div
+      id="checkout-section"
+      class="mt-10 border-t border-(--border-color) pt-6 hidden flex flex-col items-end"
+    >
+      <div class="text-xl font-bold text-(--header-color) mb-4">
+        Total: <span id="cart-total">$0.00</span>
+      </div>
+
+      <button
+        id="checkout-btn"
+        class="bg-(--btn-color) text-slate-950 font-semibold px-8 py-3 rounded-full shadow-md transition hover:brightness-102 cursor-pointer"
+      >
+        Proceed to Checkout (Stripe)
+      </button>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import {
+    cartStore,
+    removeFromCart,
+    addToCart,
+    clearCart,
+  } from "../store/cartStore";
+
+  const cartContainer = document.getElementById("cart-container");
+  const checkoutSection = document.getElementById("checkout-section");
+  const cartTotalElement = document.getElementById("cart-total");
+  const checkoutBtn = document.getElementById("checkout-btn");
+
+  // Nos suscribimos al estado global del carrito
+  cartStore.subscribe((cart) => {
+    if (!cartContainer || !checkoutSection || !cartTotalElement) return;
+
+    if (cart.length === 0) {
+      cartContainer.innerHTML = `
+        <div class="text-center py-12">
+          <p class="text-gray-500 text-lg mb-4">Your cart is empty.</p>
+          <a href="/#Menu" class="text-(--header-color) font-bold underline">Back to Menu</a>
+        </div>
+      `;
+      checkoutSection.classList.add("hidden");
+      return;
+    }
+
+    checkoutSection.classList.remove("hidden");
+
+    let total = 0;
+
+    cartContainer.innerHTML = cart
+      .map((item) => {
+        total += item.price * item.quantity;
+        return `
+        <div class="flex items-center justify-between bg-(--filler-color) border border-(--border-color) p-4 rounded-2xl gap-4">
+          <img src="${item.image}" alt="${item.name}" class="w-20 h-20 object-cover rounded-xl" />
+          <div class="flex-1">
+            <h3 class="font-bold text-(--header-color) text-lg">${item.name}</h3>
+            <p class="text-gray-600 text-sm">$${item.price.toFixed(2)}</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button class="decrease-btn px-3 py-1 bg-gray-200 rounded-lg font-bold" data-id="${item.id}">-</button>
+            <span class="font-bold">${item.quantity}</span>
+            <button class="increase-btn px-3 py-1 bg-gray-200 rounded-lg font-bold" data-id="${item.id}">+</button>
+          </div>
+          <div class="font-bold text-(--header-color)">
+            $${(item.price * item.quantity).toFixed(2)}
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+
+    cartTotalElement.innerText = `$${total.toFixed(2)}`;
+
+    // Asignar eventos a los botones de sumar/restar dentro del carrito
+    document.querySelectorAll(".decrease-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const id = (e.currentTarget as HTMLElement).dataset.id!;
+        removeFromCart(id);
+      });
+    });
+
+    document.querySelectorAll(".increase-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const id = (e.currentTarget as HTMLElement).dataset.id!;
+        const item = cart.find((i) => String(i.id) === id);
+        if (item) addToCart(item);
+      });
+    });
+  });
+
+  // Lógica provisional del botón de pago (Aquí conectaremos Stripe en el siguiente paso)
+  checkoutBtn?.addEventListener("click", async () => {
+    alert(
+      "¡Todo listo! El siguiente paso es conectar este botón con nuestra API de Stripe para procesar el pago real.",
+    );
+  });
+</script>
