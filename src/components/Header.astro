@@ -1,5 +1,6 @@
 ---
 import Button from "./Button.astro";
+import { supabase } from "../lib/supabase";
 
 type NavLink = {
   href: string;
@@ -26,22 +27,32 @@ const {
 } = Astro.props as Props;
 ---
 
-<header class={`absolute top-0 z-50 w-full py-2 ${className}`}>
-  <div class="relative flex w-full items-center px-6 py-4 sm:px-10 lg:px-16">
-    <a href={href} class="shrink-0 text-[35px] text-white font-script">
+<header
+  id="site-header"
+  class={`fixed top-0 z-50 w-full transition-all duration-300 ${className}`}
+>
+  <div
+    id="header-container"
+    class="flex w-full items-center px-6 py-4 sm:px-10 lg:px-16 transition-all duration-300"
+  >
+    <a
+      href={href}
+      id="header-logo"
+      class="shrink-0 text-[30px] text-white font-script transition-all duration-300"
+    >
       {title}
     </a>
 
     <div class="flex flex-1 items-center justify-center">
       <nav
         aria-label="Primary"
-        class="flex items-center gap-6 lg:gap-16 max-md:hidden"
+        class="flex items-center gap-6 lg:gap-14 max-md:hidden"
       >
         {
           links.map((link) => (
             <a
               href={link.href}
-              class="text-sm text-slate-300 transition-colors hover:text-white font-heading"
+              class="nav-link text-sm text-slate-300 font-medium transition-colors duration-300 hover:text-white font-heading"
             >
               {link.label}
             </a>
@@ -50,38 +61,73 @@ const {
       </nav>
     </div>
 
-    <div class="flex w-44 shrink-0 items-center justify-end gap-4">
-      <div id="auth-actions" class="flex items-center gap-3">
-        <a
-          href="/sign-in"
-          class="text-sm text-slate-300 transition-colors hover:text-white font-heading"
+    <div class="flex shrink-0 items-center justify-end gap-3">
+      <!-- Botón del carrito con style="display: none;" para forzar que NO se vea al cargar el HTML -->
+      <button
+        id="open-cart-drawer-btn"
+        type="button"
+        style="display: none;"
+        class="relative inline-flex items-center justify-center p-2 text-slate-300 transition-colors duration-300 hover:text-white cursor-pointer"
+        aria-label="Shopping Cart"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          Sign In
-        </a>
-        <Button href="/sign-up" class="h-10 px-4 text-sm"> Sign Up </Button>
-      </div>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63"
+          ></path>
+        </svg>
+        <span
+          id="header-cart-badge"
+          class="absolute -top-1 -right-1 text-[10px] btn-color px-1.5 py-0.1 rounded-full font-bold text-slate-950 hidden"
+          >0</span
+        >
+      </button>
 
-      <div id="user-menu-wrapper" class="relative hidden">
-        <button
-          id="user-menu-button"
-          type="button"
-          class="btn-color inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-(--btn-color) text-lg font-semibold text-slate-950 shadow-md transition duration-200 ease-out hover:brightness-102 hover:shadow-[0_8px_16px_rgba(249,192,106,0.22)]"
-          aria-label="Open user menu"
-        >
-          <span id="user-initial">U</span>
-        </button>
-
-        <div
-          id="user-menu"
-          class="absolute right-0 mt-2 hidden w-44 rounded-2xl border border-(--border-color)/40 bg-white p-2 shadow-xl"
-        >
-          <button
-            id="sign-out-button"
-            type="button"
-            class="block w-full rounded-xl px-3 py-2 text-left text-sm text-(--header-color) transition hover:bg-(--filler-color)"
+      <!-- Contenedor de autenticación con opacidad 0 inicial -->
+      <div
+        id="auth-container"
+        class="flex items-center opacity-0 transition-opacity duration-200"
+      >
+        <div id="auth-actions" class="flex items-center gap-3">
+          <a
+            href="/sign-in"
+            class="nav-link text-sm text-slate-300 font-medium transition-colors duration-300 hover:text-white font-heading"
           >
-            Sign out
+            Sign In
+          </a>
+          <Button href="/sign-up" class="h-9 px-3.5 text-xs"> Sign Up </Button>
+        </div>
+
+        <div id="user-menu-wrapper" class="relative hidden">
+          <button
+            id="user-menu-button"
+            type="button"
+            class="btn-color inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-(--btn-color) text-base font-semibold text-slate-950 shadow-md transition duration-200 ease-out hover:brightness-102 cursor-pointer"
+            aria-label="Open user menu"
+          >
+            <span id="user-initial">U</span>
           </button>
+
+          <div
+            id="user-menu"
+            class="absolute right-0 mt-2 hidden w-44 rounded-2xl border border-(--border-color)/40 bg-white p-2 shadow-xl"
+          >
+            <button
+              id="sign-out-button"
+              type="button"
+              class="block w-full rounded-xl px-3 py-2 text-left text-sm text-(--header-color) transition hover:bg-(--filler-color) cursor-pointer"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -90,19 +136,30 @@ const {
 
 <script>
   import { supabase } from "../lib/supabase";
+  import { cartStore } from "../store/cartStore";
   import Swal from "sweetalert2";
 
+  const header = document.getElementById("site-header");
+  const headerContainer = document.getElementById("header-container");
+  const logo = document.getElementById("header-logo");
+  const navLinks = document.querySelectorAll(".nav-link");
+  const cartBtn = document.getElementById("open-cart-drawer-btn");
+  const authContainer = document.getElementById("auth-container");
   const authActions = document.getElementById("auth-actions");
   const userMenuWrapper = document.getElementById("user-menu-wrapper");
   const userMenu = document.getElementById("user-menu");
   const userMenuButton = document.getElementById("user-menu-button");
   const userInitial = document.getElementById("user-initial");
   const signOutButton = document.getElementById("sign-out-button");
+  const headerCartBadge = document.getElementById("header-cart-badge");
+  const openCartBtn = document.getElementById("open-cart-drawer-btn");
 
   let isLoggingOut = false;
+  let previousUserId: string | null = null;
 
   type UserLike =
     | {
+        id?: string;
         user_metadata?: { full_name?: string } | undefined;
         email?: string | undefined;
       }
@@ -113,15 +170,79 @@ const {
     user?: UserLike;
   } | null;
 
-  const setLoggedOutUI = () => {
+  // Efecto Scroll
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 20) {
+      header?.classList.add(
+        "bg-[#f3ece2]/95",
+        "backdrop-blur-md",
+        "shadow-[0_10px_30px_-5px_rgba(0,0,0,0.18)]",
+      );
+      headerContainer?.classList.remove("py-4");
+      headerContainer?.classList.add("py-2.5");
+      logo?.classList.remove("text-white", "text-[30px]");
+      logo?.classList.add("text-[var(--header-color)]", "text-[26px]");
+      cartBtn?.classList.remove("text-slate-300", "hover:text-white");
+      cartBtn?.classList.add("text-[var(--header-color)]", "hover:opacity-75");
+      navLinks.forEach((link) => {
+        link.classList.remove("text-slate-300", "hover:text-white");
+        link.classList.add("text-[var(--header-color)]", "hover:opacity-75");
+      });
+    } else {
+      header?.classList.remove(
+        "bg-[#f3ece2]/95",
+        "backdrop-blur-md",
+        "shadow-[0_10px_30px_-5px_rgba(0,0,0,0.18)]",
+      );
+      headerContainer?.classList.remove("py-2.5");
+      headerContainer?.classList.add("py-4");
+      logo?.classList.remove("text-[var(--header-color)]", "text-[26px]");
+      logo?.classList.add("text-white", "text-[30px]");
+      cartBtn?.classList.remove(
+        "text-[var(--header-color)]",
+        "hover:opacity-75",
+      );
+      cartBtn?.classList.add("text-slate-300", "hover:text-white");
+      navLinks.forEach((link) => {
+        link.classList.remove("text-[var(--header-color)]", "hover:opacity-75");
+        link.classList.add("text-slate-300", "hover:text-white");
+      });
+    }
+  });
+
+  const resetCart = () => {
+    if (typeof cartStore.set === "function") {
+      cartStore.set([]);
+    }
+    localStorage.removeItem("cart");
+  };
+
+  const handleAuthChange = (user: UserLike) => {
+    const currentUserId = user?.id || null;
+    if (previousUserId !== currentUserId) {
+      resetCart();
+    }
+    previousUserId = currentUserId;
+  };
+
+  const setLoggedOutUI = (user: UserLike) => {
+    handleAuthChange(user);
     if (isLoggingOut) return;
+
     authActions?.classList.remove("hidden");
     userMenuWrapper?.classList.add("hidden");
     userMenu?.classList.add("hidden");
+    authContainer?.classList.remove("opacity-0");
+
+    // Oculta completamente el carrito y el badge forzando el estilo en línea
+    if (openCartBtn) openCartBtn.style.display = "none";
+    if (headerCartBadge) headerCartBadge.classList.add("hidden");
   };
 
   const setLoggedInUI = (user: UserLike) => {
+    handleAuthChange(user);
     if (isLoggingOut) return;
+
     const fullName = user?.user_metadata?.full_name || user?.email || "User";
     const initial = fullName.charAt(0).toUpperCase();
 
@@ -130,6 +251,10 @@ const {
     if (userInitial) {
       userInitial.textContent = initial;
     }
+    authContainer?.classList.remove("opacity-0");
+
+    // Restaura la visibilidad normal del carrito solo si hay sesión
+    if (openCartBtn) openCartBtn.style.display = "inline-flex";
   };
 
   const syncAuthUI = async () => {
@@ -140,9 +265,27 @@ const {
     if (session?.user) {
       setLoggedInUI(session.user);
     } else {
-      setLoggedOutUI();
+      setLoggedOutUI(session?.user);
     }
   };
+
+  openCartBtn?.addEventListener("click", () => {
+    if (typeof (window as any).openCartDrawer === "function") {
+      (window as any).openCartDrawer();
+    }
+  });
+
+  cartStore.subscribe((cart) => {
+    if (!headerCartBadge) return;
+    const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+    // Doble verificación: solo mostramos el número si hay items Y si el botón está visible
+    if (totalItems > 0 && openCartBtn?.style.display !== "none") {
+      headerCartBadge.textContent = String(totalItems);
+      headerCartBadge.classList.remove("hidden");
+    } else {
+      headerCartBadge.classList.add("hidden");
+    }
+  });
 
   userMenuButton?.addEventListener("click", () => {
     userMenu?.classList.toggle("hidden");
@@ -162,6 +305,8 @@ const {
   signOutButton?.addEventListener("click", async () => {
     userMenu?.classList.add("hidden");
     isLoggingOut = true;
+
+    resetCart();
 
     const { error } = await supabase.auth.signOut();
 
@@ -202,7 +347,7 @@ const {
     if (session?.user) {
       setLoggedInUI(session.user);
     } else {
-      setLoggedOutUI();
+      setLoggedOutUI(session?.user);
     }
   });
 

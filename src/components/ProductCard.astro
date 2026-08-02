@@ -1,11 +1,10 @@
 ---
 import { Image } from "astro:assets";
-import Button from "./Button.astro";
 import type { ImageMetadata } from "astro";
 
 export interface Props {
   product: {
-    id: string;
+    id: string | number;
     name: string;
     description: string;
     price: number;
@@ -20,6 +19,9 @@ const formattedPrice = new Intl.NumberFormat("en-US", {
   currency: "USD",
   minimumFractionDigits: 2,
 }).format(product.price);
+
+const imageSrc =
+  typeof product.image === "string" ? product.image : product.image.src;
 ---
 
 <article
@@ -60,6 +62,69 @@ const formattedPrice = new Intl.NumberFormat("en-US", {
       {formattedPrice}
     </span>
 
-    <Button fontWeight="500"> Order Now </Button>
+    <button
+      type="button"
+      class="add-to-cart-btn btn-color text-slate-950 font-semibold px-6 py-2.5 rounded-full shadow-md transition font-heading opacity-50 cursor-not-allowed"
+      disabled
+      data-id={product.id}
+      data-name={product.name}
+      data-price={product.price}
+      data-image={imageSrc}
+    >
+      Add to cart
+    </button>
   </div>
 </article>
+
+<script>
+  import { supabase } from "../lib/supabase";
+  import { addToCart } from "../store/cartStore";
+
+  const buttons = document.querySelectorAll(".add-to-cart-btn");
+
+  const syncButtonsState = (hasSession: boolean) => {
+    buttons.forEach((btn) => {
+      const button = btn as HTMLButtonElement;
+      if (hasSession) {
+        button.disabled = false;
+        button.classList.remove("opacity-50", "cursor-not-allowed");
+        button.classList.add("hover:brightness-105", "cursor-pointer");
+      } else {
+        button.disabled = true;
+        button.classList.add("opacity-50", "cursor-not-allowed");
+        button.classList.remove("hover:brightness-105", "cursor-pointer");
+      }
+    });
+  };
+
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    syncButtonsState(!!session?.user);
+  });
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    syncButtonsState(!!session?.user);
+  });
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLButtonElement;
+
+      if (target.disabled) return;
+
+      const product = {
+        id: target.getAttribute("data-id")!,
+        name: target.getAttribute("data-name")!,
+        price: Number(target.getAttribute("data-price")!),
+        image: target.getAttribute("data-image")!,
+      };
+
+      addToCart(product);
+
+      const originalText = target.innerText;
+      target.innerText = "Added! ✓";
+      setTimeout(() => {
+        target.innerText = originalText;
+      }, 1500);
+    });
+  });
+</script>

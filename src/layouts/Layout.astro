@@ -1,6 +1,7 @@
 ---
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import CartDrawer from "../components/CartDrawer.astro"; // <-- 1. Importarlo
 import "../styles/global.css";
 
 const { title = "Bean Scene", hideHeaderFooter } = Astro.props;
@@ -21,5 +22,7 @@ const shouldHideHeaderFooter =
     {shouldHideHeaderFooter ? null : <Header />}
     <slot />
     {shouldHideHeaderFooter ? null : <Footer />}
+
+    <CartDrawer />
   </body>
 </html>
