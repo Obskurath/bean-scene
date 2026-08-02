@@ -5,10 +5,10 @@ import Button from "../components/Button.astro";
 ---
 
 <Layout title="Sign Up | Bean Scene" hideHeaderFooter={true}>
-  <main class="min-h-screen bg-(--filler-color) px-4 py-8 sm:px-6 lg:px-8">
-    <div
-      class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center justify-center"
-    >
+  <main
+    class="h-dvh overflow-hidden bg-(--filler-color) flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8"
+  >
+    <div class="w-full max-w-6xl flex items-center justify-center">
       <div
         class="grid w-full overflow-hidden rounded-4xl border border-(--border-color)/40 bg-white shadow-[0_25px_80px_rgba(96,56,9,0.16)] lg:grid-cols-[1.05fr_0.95fr]"
       >
@@ -163,7 +163,7 @@ import Button from "../components/Button.astro";
         icon: "error",
         title: "Oops...",
         text: error.message,
-        confirmButtonColor: "var(--header-color)",
+        confirmButtonColor: "var(--btn-color)",
         background: "var(--filler-color)",
         color: "var(--text-color)",
         customClass: {

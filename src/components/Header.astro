@@ -34,7 +34,10 @@ const {
     </a>
 
     <div class="flex flex-1 items-center justify-center">
-      <nav aria-label="Primary" class="flex items-center gap-16">
+      <nav
+        aria-label="Primary"
+        class="flex items-center gap-6 lg:gap-16 max-md:hidden"
+      >
         {
           links.map((link) => (
             <a
@@ -97,7 +100,6 @@ const {
   const userInitial = document.getElementById("user-initial");
   const signOutButton = document.getElementById("sign-out-button");
 
-  // Bandera para bloquear cambios de UI mientras corre la alerta de salida
   let isLoggingOut = false;
 
   type UserLike =
@@ -113,14 +115,14 @@ const {
   } | null;
 
   const setLoggedOutUI = () => {
-    if (isLoggingOut) return; // Si estamos cerrando sesión, ignoramos esto hasta que termine el alert
+    if (isLoggingOut) return;
     authActions?.classList.remove("hidden");
     userMenuWrapper?.classList.add("hidden");
     userMenu?.classList.add("hidden");
   };
 
   const setLoggedInUI = (user: UserLike) => {
-    if (isLoggingOut) return; // Si estamos cerrando sesión, evitamos actualizar la interfaz
+    if (isLoggingOut) return;
     const fullName = user?.user_metadata?.full_name || user?.email || "User";
     const initial = fullName.charAt(0).toUpperCase();
 
@@ -160,12 +162,12 @@ const {
 
   signOutButton?.addEventListener("click", async () => {
     userMenu?.classList.add("hidden");
-    isLoggingOut = true; // Activamos el bloqueo para que la interfaz no cambie de golpe
+    isLoggingOut = true;
 
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      isLoggingOut = false; // Desactivamos el bloqueo si hubo error
+      isLoggingOut = false;
       Swal.fire({
         icon: "error",
         title: "Oops...",

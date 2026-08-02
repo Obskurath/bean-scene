@@ -15,10 +15,9 @@ const { content } = Astro.props;
 ---
 
 <article
-  class="bg-(--filler-color) border border-(--border-color) flex flex-col items-center text-center px-4 py-14 rounded-2xl"
+  class="bg-(--filler-color) border border-(--border-color) flex flex-col items-center text-center px-4 py-8 md:py-14 rounded-2xl"
 >
-  <!-- Contenedor ajustado para íconos SVG -->
-  <div class="w-16 h-16 mb-4">
+  <div class="w-10 h-10 md:w-16 md:h-16 mb-4">
     <Image
       src={content.icon}
       alt={`Icono de ${content.title}`}
@@ -27,11 +26,11 @@ const { content } = Astro.props;
   </div>
 
   <div class="flex flex-col items-center w-full">
-    <h3 class="text-xl font-bold text-(--header-color) mb-2 text-[28px]">
+    <h3 class="text-xl md:text-[28px] font-bold text-(--header-color) mb-2">
       {content.title}
     </h3>
 
-    <p class="text-(--text-color) text-[20px] px-4">
+    <p class="text-(--text-color) text-sm md:text-[20px] px-2 md:px-4">
       {content.description}
     </p>
   </div>
