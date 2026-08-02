@@ -1,0 +1,68 @@
+---
+export const prerender = false;
+
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Payment Successful | Bean Scene" hideHeaderFooter>
+  <main
+    class="h-dvh flex items-center justify-center bg-(--filler-color) px-6 py-8"
+  >
+    <div
+      class="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl text-center border border-(--border-color)/30"
+    >
+      <div
+        class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-10 w-10 text-green-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="3"
+            d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+
+      <h1 class="text-3xl font-bold text-(--header-color) font-heading mb-4">
+        Payment Successful!
+      </h1>
+
+      <p class="text-(--text-color) mb-8 text-sm">
+        Thank you for your order. Your transaction has been completed and
+        securely saved.
+      </p>
+
+      <a
+        href="/"
+        class="block w-full btn-color text-slate-950 font-bold py-3 px-6 rounded-full shadow-md transition hover:brightness-105 font-heading"
+      >
+        Back to Menu
+      </a>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { clearCart } from "../store/cartStore";
+
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session_id");
+
+  if (sessionId) {
+    fetch("/api/confirm-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    }).catch((error) => {
+      console.error("Error confirming order:", error);
+    });
+  }
+
+  clearCart();
+</script>

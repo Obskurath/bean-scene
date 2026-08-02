@@ -56,6 +56,8 @@
 </div>
 
 <script>
+  // 1. IMPORTANTE: Importamos supabase para poder leer quién es el usuario
+  import { supabase } from "../lib/supabase";
   import { cartStore, removeFromCart, addToCart } from "../store/cartStore";
 
   const drawer = document.getElementById("cart-drawer");
@@ -65,6 +67,8 @@
   const drawerFooter = document.getElementById("drawer-footer");
   const cartTotalElement = document.getElementById("drawer-cart-total");
   const cartCountBadge = document.getElementById("cart-count-badge");
+
+  const checkoutBtn = document.getElementById("drawer-checkout-btn");
 
   (window as any).openCartDrawer = () => {
     drawer?.classList.remove("translate-x-full");
@@ -144,5 +148,48 @@
         if (item) addToCart(item);
       });
     });
+  });
+
+  checkoutBtn?.addEventListener("click", async () => {
+    const cart = cartStore.get();
+    if (cart.length === 0) return;
+
+    try {
+      if (checkoutBtn) {
+        checkoutBtn.innerText = "Processing...";
+        checkoutBtn.classList.add("opacity-50", "cursor-not-allowed");
+        checkoutBtn.setAttribute("disabled", "true");
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart,
+          userId: user?.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || "Error al crear la sesión");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Hubo un error al procesar el pago. Intenta de nuevo.");
+
+      if (checkoutBtn) {
+        checkoutBtn.innerText = "Proceed to Checkout";
+        checkoutBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        checkoutBtn.removeAttribute("disabled");
+      }
+    }
   });
 </script>

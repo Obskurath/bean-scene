@@ -1,12 +1,18 @@
 ---
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import CartDrawer from "../components/CartDrawer.astro"; // <-- 1. Importarlo
+import CartDrawer from "../components/CartDrawer.astro";
 import "../styles/global.css";
 
-const { title = "Bean Scene", hideHeaderFooter } = Astro.props;
+interface Props {
+  title?: string;
+  hideHeaderFooter?: boolean;
+}
+
+const { title = "Bean Scene", hideHeaderFooter = false } = Astro.props;
+const pathname = Astro.url.pathname;
 const shouldHideHeaderFooter =
-  hideHeaderFooter ?? Astro.url.pathname === "/login";
+  hideHeaderFooter || pathname === "/login" || pathname === "/success";
 ---
 
 <!doctype html>
