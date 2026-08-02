@@ -3,7 +3,7 @@ import ProductCard from "@components/ProductCard.astro";
 import { supabase } from "../lib/supabase";
 
 const { data: productsSupabase, error } = await supabase
-  .from("productos")
+  .from("products")
   .select("*");
 
 if (error) {
@@ -24,9 +24,7 @@ const productsData = (productsSupabase || []).map((item) => ({
   id="Menu"
 >
   <div class="text-center mb-12">
-    <h2
-      class="text-4xl md:text-5xl font-bold text-(--header-color) font-serif mb-4"
-    >
+    <h2 class="text-4xl md:text-5xl font-bold text-(--header-color) mb-4">
       Enjoy a new blend of coffee style
     </h2>
     <p class="text-(--text-color) text-lg max-w-2xl mx-auto">
