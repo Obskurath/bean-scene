@@ -130,7 +130,10 @@ import Button from "../components/Button.astro";
 </Layout>
 
 <script>
-  import { supabase } from "../lib/supabase";
+  import {
+    getSupabaseClientForCurrentPreference,
+    setRememberMePreference,
+  } from "../lib/supabase";
   import Swal from "sweetalert2";
 
   const form = document.getElementById("login-form") as HTMLFormElement;
@@ -143,12 +146,12 @@ import Button from "../components/Button.astro";
     const password = formData.get("password") as string;
     const rememberMe = (formData.get("remember-me") as string | null) === "on";
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    setRememberMePreference(rememberMe);
+    const authClient = getSupabaseClientForCurrentPreference();
+
+    const { error } = await authClient.auth.signInWithPassword({
       email: email,
       password: password,
-      options: {
-        persistSession: rememberMe,
-      },
     });
 
     if (error) {
