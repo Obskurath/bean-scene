@@ -17,7 +17,7 @@ const {
   title = "Bean Scene",
   href = "/",
   links = [
-    { href: "/#Home", label: "Home" },
+    { href: "/", label: "Home" },
     { href: "/#Discover", label: "Discover" },
     { href: "/#Menu", label: "Menu" },
     { href: "/#About", label: "About Us" },
@@ -142,59 +142,8 @@ const {
   </div>
 </header>
 
-<script is:inline>
-  (function () {
-    var hash = window.location.hash;
-    var isScrolled = window.scrollY > 20 || (hash && hash !== "#Home");
-
-    if (isScrolled) {
-      var header = document.getElementById("site-header");
-      var headerContainer = document.getElementById("header-container");
-      var logo = document.getElementById("header-logo");
-      var cartBtn = document.getElementById("open-cart-drawer-btn");
-      var navLinks = document.querySelectorAll(".nav-link");
-
-      if (header) {
-        header.classList.add(
-          "bg-[#f3ece2]/95",
-          "backdrop-blur-md",
-          "shadow-[0_10px_30px_-5px_rgba(0,0,0,0.18)]",
-        );
-      }
-
-      if (headerContainer) {
-        headerContainer.classList.remove("py-4");
-        headerContainer.classList.add("py-2.5");
-      }
-
-      if (logo) {
-        logo.classList.remove("text-white", "text-[30px]");
-        logo.classList.add("text-[var(--header-color)]", "text-[26px]");
-      }
-
-      if (cartBtn) {
-        cartBtn.classList.remove(
-          "text-(--filler-color)",
-          "text-slate-300",
-          "hover:text-white",
-        );
-        cartBtn.classList.add("text-[var(--header-color)]", "hover:opacity-75");
-      }
-
-      if (navLinks && navLinks.length > 0) {
-        for (var i = 0; i < navLinks.length; i++) {
-          navLinks[i].classList.remove("text-slate-300", "hover:text-white");
-          navLinks[i].classList.add(
-            "text-[var(--header-color)]",
-            "hover:opacity-75",
-          );
-        }
-      }
-    }
-  })();
-</script>
-
 <script>
   import { initHeader } from "../scripts/ui/header";
+
   initHeader();
 </script>
