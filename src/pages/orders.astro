@@ -8,7 +8,6 @@ export const prerender = false;
   <main class="max-w-4xl mx-auto px-4 py-12 pt-32">
     <h1 class="text-3xl font-bold mb-8 text-gray-900">Order History</h1>
 
-    <!-- Panel de depuración (Si algo falla, te dirá EXACTAMENTE por qué en letras rojas) -->
     <div
       id="debug-panel"
       class="hidden mb-6 p-4 bg-red-50 text-red-800 border border-red-200 rounded-md text-sm font-mono break-all"
@@ -24,9 +23,7 @@ export const prerender = false;
       Searching for session and loading orders...
     </div>
 
-    <div id="orders-container" class="space-y-6 hidden">
-      <!-- Orders will be injected here -->
-    </div>
+    <div id="orders-container" class="space-y-6 hidden"></div>
 
     <div
       id="no-orders"
@@ -77,9 +74,7 @@ export const prerender = false;
     console.error(msg);
   }
 
-  // Sabueso: Busca el token sin importar dónde lo haya guardado tu sistema de login
   async function huntForToken() {
-    // 1. Buscar en LocalStorage
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.includes("-auth-token")) {
@@ -93,7 +88,6 @@ export const prerender = false;
       }
     }
 
-    // 2. Buscar en Cookies
     const cookies = document.cookie.split(";");
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i].trim();
@@ -111,7 +105,7 @@ export const prerender = false;
           if (val.startsWith("{")) {
             const parsed = JSON.parse(val);
             if (parsed.access_token) return parsed.access_token;
-            if (parsed[0]) return parsed[0]; // Soporte para tokens en chunks
+            if (parsed[0]) return parsed[0];
           }
         } catch (e) {}
       }
@@ -119,7 +113,6 @@ export const prerender = false;
     return null;
   }
 
-  // Extraer el ID del usuario directamente desencriptando el JWT
   function parseJwt(token: string) {
     try {
       const base64Url = token.split(".")[1];
@@ -165,7 +158,6 @@ export const prerender = false;
         return;
       }
 
-      // Petición REST directa a Supabase (Saltándose el cliente oficial)
       const url = `${supabaseUrl}/rest/v1/orders?select=*,order_items(product_name,price,quantity)&user_id=eq.${user.sub}&order=created_at.desc`;
 
       const response = await fetch(url, {
