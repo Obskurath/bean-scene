@@ -65,26 +65,25 @@ const {
         id="open-cart-drawer-btn"
         type="button"
         style="display: none;"
-        class="relative inline-flex items-center justify-center p-2 text-slate-300 transition-colors duration-300 hover:text-white cursor-pointer"
+        class="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F9C06A]/20 text-[#603809] border border-[#F9C06A]/40 transition-all duration-300 hover:bg-[#F9C06A]/30 cursor-pointer shadow-sm"
         aria-label="Shopping Cart"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="w-5 h-5"
+          class="w-4 h-4"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          stroke-width="2.5"
         >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
-            stroke-width="2"
-            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63"
-          ></path>
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
         </svg>
         <span
           id="header-cart-badge"
-          class="absolute -top-1 -right-1 text-[10px] btn-color px-1.5 py-0.1 rounded-full font-bold text-slate-950 hidden"
+          class="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full btn-color px-1 text-[10px] font-bold text-[#603809] shadow-md border-2 border-white hidden font-heading"
           >0</span
         >
       </button>
