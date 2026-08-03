@@ -6,7 +6,9 @@ export const prerender = false;
 
 <Layout title="My Orders - Bean Scene" solidHeader={true}>
   <main class="max-w-4xl mx-auto px-4 py-12 pt-32">
-    <h1 class="text-3xl font-bold mb-8 text-gray-900">Order History</h1>
+    <h1 class="text-3xl font-bold mb-8 text-gray-900 font-heading">
+      Order History
+    </h1>
 
     <div
       id="debug-panel"
@@ -18,7 +20,7 @@ export const prerender = false;
 
     <div
       id="orders-loading"
-      class="text-center py-12 text-gray-500 font-medium animate-pulse"
+      class="text-center py-12 text-gray-500 font-medium animate-pulse font-heading"
     >
       Searching for session and loading orders...
     </div>
@@ -32,7 +34,7 @@ export const prerender = false;
       <p class="text-gray-600 mb-4">You haven't placed any orders yet.</p>
       <a
         href="/"
-        class="inline-block bg-amber-800 text-white px-6 py-2 rounded-md hover:bg-amber-900 transition-colors"
+        class="inline-block bg-[#F9C06A] text-[#603809] font-bold px-6 py-2 rounded-md hover:brightness-105 transition-all"
       >
         Explore Coffee
       </a>
@@ -42,12 +44,12 @@ export const prerender = false;
       id="auth-warning"
       class="bg-amber-50 border border-amber-200 rounded-lg p-8 text-center shadow-sm hidden"
     >
-      <p class="text-amber-800 mb-4 font-medium">
+      <p class="text-amber-800 mb-4 font-medium font-heading">
         Please sign in to view your order history.
       </p>
       <a
         href="/sign-in"
-        class="inline-block bg-amber-800 text-white px-6 py-2 rounded-md hover:bg-amber-900 transition-colors"
+        class="inline-block bg-[#F9C06A] text-[#603809] font-bold px-6 py-2 rounded-md hover:brightness-105 transition-all"
       >
         Sign In
       </a>
@@ -57,6 +59,7 @@ export const prerender = false;
 
 <script>
   import Swal from "sweetalert2";
+  import { supabase } from "../lib/supabase";
   import { addToCart } from "../store/cartStore";
 
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
@@ -145,23 +148,30 @@ export const prerender = false;
         return;
       }
 
-      const token = await huntForToken();
+      // Obtenemos la sesión directamente de Supabase (que ya está actualizada)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!token) {
+      let token = session?.access_token;
+      let userId = session?.user?.id;
+
+      // Si por alguna razón la sesión no está en el cliente, usamos el respaldo de localStorage/cookies
+      if (!token || !userId) {
+        token = await huntForToken();
+        if (token) {
+          const jwtUser = parseJwt(token);
+          userId = jwtUser?.sub;
+        }
+      }
+
+      if (!token || !userId) {
         loadingEl?.remove();
         authWarningEl?.classList.remove("hidden");
         return;
       }
 
-      const user = parseJwt(token);
-      if (!user || !user.sub) {
-        logDebug("The found token is invalid or corrupted.");
-        loadingEl?.remove();
-        authWarningEl?.classList.remove("hidden");
-        return;
-      }
-
-      const ordersUrl = `${supabaseUrl}/rest/v1/orders?select=*,order_items(product_id,product_name,price,quantity)&user_id=eq.${user.sub}&order=created_at.desc`;
+      const ordersUrl = `${supabaseUrl}/rest/v1/orders?select=*,order_items(product_id,product_name,price,quantity)&user_id=eq.${userId}&order=created_at.desc`;
       const productsUrl = `${supabaseUrl}/rest/v1/products?select=id,nombre,imagen_url`;
 
       const [ordersRes, productsRes] = await Promise.all([
@@ -439,7 +449,7 @@ export const prerender = false;
             title: "Coffee is brewing!",
             text: "Items added to your cart.",
             showConfirmButton: false,
-            timer: 1500,
+            timer: 3000,
             timerProgressBar: true,
             background: "#FFF9F1",
             color: "#603809",

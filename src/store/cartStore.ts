@@ -1,4 +1,5 @@
 import { atom } from "nanostores";
+import Swal from "sweetalert2";
 
 export interface CartItem {
   id: string | number;
@@ -32,6 +33,26 @@ export function addToCart(product: Omit<CartItem, "quantity">) {
     cartStore.set(newCart);
   } else {
     cartStore.set([...currentCart, { ...product, quantity: 1 }]);
+  }
+
+  if (isBrowser) {
+    Swal.fire({
+      toast: true,
+      position: "bottom-end",
+      icon: "success",
+      title: "Coffee is brewing!",
+      text: `${product.name} added to your cart.`,
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+      background: "#FFF9F1",
+      color: "#603809",
+      iconColor: "#F9C06A",
+      customClass: {
+        title: "font-heading font-bold",
+        popup: "border border-[#F9C06A]",
+      },
+    });
   }
 }
 

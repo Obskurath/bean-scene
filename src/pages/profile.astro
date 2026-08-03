@@ -1,0 +1,350 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+export const prerender = false;
+---
+
+<Layout title="My Profile - Bean Scene" solidHeader={true}>
+  <main class="max-w-3xl mx-auto px-4 py-12 pt-32">
+    <h1 class="text-3xl font-bold mb-8 text-gray-900 font-heading">
+      My Profile
+    </h1>
+
+    <div
+      id="debug-panel"
+      class="hidden mb-6 p-4 bg-red-50 text-red-800 border border-red-200 rounded-md text-sm font-mono break-all"
+    >
+      <strong>Debug Log:</strong>
+      <span id="debug-message"></span>
+    </div>
+
+    <div
+      id="profile-loading"
+      class="text-center py-12 text-gray-500 font-medium animate-pulse font-heading"
+    >
+      Loading profile information...
+    </div>
+
+    <div id="profile-container" class="space-y-6 hidden">
+      <div class="border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
+        <div class="flex items-center gap-4 mb-6 border-b pb-6">
+          <div
+            class="w-16 h-16 rounded-full btn-color flex items-center justify-center text-2xl font-bold text-[#603809] font-heading shadow-md"
+            id="profile-initial"
+          >
+            U
+          </div>
+          <div>
+            <h2
+              class="text-xl font-bold text-gray-900 font-heading"
+              id="profile-name"
+            >
+              User
+            </h2>
+            <p class="text-sm text-gray-500" id="profile-email">
+              email@example.com
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label
+              class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
+              >User ID</label
+            >
+            <p
+              class="font-mono text-xs font-semibold text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-200"
+              id="profile-id"
+            >
+              -
+            </p>
+          </div>
+
+          <div>
+            <label
+              class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1"
+              >Account Status</label
+            >
+            <p
+              class="text-sm font-medium text-green-700 bg-green-50 p-2.5 rounded-lg border border-green-200 inline-block"
+            >
+              Active Member
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="flex flex-wrap justify-end gap-3 pt-6 mt-6 border-t border-gray-100"
+        >
+          <a
+            href="/orders"
+            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            View Orders
+          </a>
+          <button
+            id="update-profile-btn"
+            class="px-4 py-2 bg-[#F9C06A] text-[#603809] rounded-lg text-sm font-bold hover:brightness-105 transition-all cursor-pointer shadow-sm"
+          >
+            Edit Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="auth-warning"
+      class="bg-amber-50 border border-amber-200 rounded-lg p-8 text-center shadow-sm hidden"
+    >
+      <p class="text-amber-800 mb-4 font-medium font-heading">
+        Please sign in to view your profile.
+      </p>
+      <a
+        href="/sign-in"
+        class="inline-block bg-[#F9C06A] text-[#603809] font-bold px-6 py-2 rounded-md hover:brightness-105 transition-all"
+      >
+        Sign In
+      </a>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import Swal from "sweetalert2";
+  import { supabase } from "../lib/supabase";
+
+  const loadingEl = document.getElementById("profile-loading");
+  const containerEl = document.getElementById("profile-container");
+  const authWarningEl = document.getElementById("auth-warning");
+  const debugPanel = document.getElementById("debug-panel");
+  const debugMessage = document.getElementById("debug-message");
+
+  const profileNameEl = document.getElementById("profile-name");
+  const profileEmailEl = document.getElementById("profile-email");
+  const profileIdEl = document.getElementById("profile-id");
+  const profileInitialEl = document.getElementById("profile-initial");
+  const updateProfileBtn = document.getElementById("update-profile-btn");
+
+  function logDebug(msg: string) {
+    if (debugPanel && debugMessage) {
+      debugPanel.classList.remove("hidden");
+      debugMessage.innerHTML += msg + "<br>";
+    }
+    console.error(msg);
+  }
+
+  async function huntForToken() {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes("-auth-token")) {
+        try {
+          const item = localStorage.getItem(key);
+          if (item) {
+            const parsed = JSON.parse(item);
+            if (parsed.access_token) return parsed.access_token;
+          }
+        } catch (e) {}
+      }
+    }
+
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (
+        cookie.includes("access-token=") ||
+        cookie.includes("sb-access-token=")
+      ) {
+        return cookie.split("=")[1];
+      }
+      if (cookie.includes("-auth-token=")) {
+        try {
+          const val = decodeURIComponent(
+            cookie.substring(cookie.indexOf("=") + 1),
+          );
+          if (val.startsWith("{")) {
+            const parsed = JSON.parse(val);
+            if (parsed.access_token) return parsed.access_token;
+            if (parsed[0]) return parsed[0];
+          }
+        } catch (e) {}
+      }
+    }
+    return null;
+  }
+
+  function parseJwt(token: string) {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function fetchProfile() {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      let currentUser: any = user;
+      if (!currentUser) {
+        const token = await huntForToken();
+        if (!token) {
+          loadingEl?.remove();
+          authWarningEl?.classList.remove("hidden");
+          return;
+        }
+        currentUser = parseJwt(token);
+        if (!currentUser || !currentUser.sub) {
+          loadingEl?.remove();
+          authWarningEl?.classList.remove("hidden");
+          return;
+        }
+      }
+
+      const email =
+        currentUser.email ||
+        currentUser.user_metadata?.email ||
+        "No email provided";
+      const fullName =
+        currentUser.user_metadata?.full_name ||
+        currentUser.user_metadata?.name ||
+        email.split("@")[0];
+      const userId = currentUser.id || currentUser.sub;
+
+      if (profileNameEl) profileNameEl.innerText = fullName;
+      if (profileEmailEl) profileEmailEl.innerText = email;
+      if (profileIdEl) profileIdEl.innerText = userId;
+      if (profileInitialEl)
+        profileInitialEl.innerText = fullName.charAt(0).toUpperCase();
+
+      loadingEl?.remove();
+      containerEl?.classList.remove("hidden");
+    } catch (e: any) {
+      loadingEl?.remove();
+      logDebug(`Error loading profile: ${e.message}`);
+    }
+  }
+
+  updateProfileBtn?.addEventListener("click", async () => {
+    const currentName = profileNameEl?.innerText || "";
+    const currentEmail = profileEmailEl?.innerText || "";
+
+    const { value: formValues } = await Swal.fire({
+      title: "Edit Profile",
+      html: `
+        <div style="text-align: left; font-family: var(--font-heading);">
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 12px; font-weight: bold; color: var(--header-color); margin-bottom: 4px;">Full Name</label>
+            <input id="swal-input-name" class="swal2-input" value="${currentName}" placeholder="Full Name" style="margin: 0; width: 100%; box-sizing: border-box;">
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 12px; font-weight: bold; color: var(--header-color); margin-bottom: 4px;">Email Address</label>
+            <input id="swal-input-email" type="email" class="swal2-input" value="${currentEmail}" placeholder="Email address" style="margin: 0; width: 100%; box-sizing: border-box;">
+          </div>
+
+          <div style="margin-bottom: 0;">
+            <label style="display: block; font-size: 12px; font-weight: bold; color: var(--header-color); margin-bottom: 4px;">New Password <span style="font-weight: normal; font-size: 11px; color: var(--text-color);">(leave blank to keep current)</span></label>
+            <input id="swal-input-password" type="password" class="swal2-input" placeholder="••••••••" style="margin: 0; width: 100%; box-sizing: border-box;">
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonColor: "#F9C06A",
+      cancelButtonColor: "#e5e7eb",
+      confirmButtonText:
+        '<span style="color: #603809; font-weight: bold; font-family: var(--font-heading);">Save Changes</span>',
+      cancelButtonText:
+        '<span style="color: #707070; font-family: var(--font-heading);">Cancel</span>',
+      background: "#fffefc",
+      customClass: {
+        title: "font-heading",
+        popup: "rounded-xl shadow-xl border border-[#F9C06A]/20",
+      },
+      preConfirm: () => {
+        return {
+          name: (document.getElementById("swal-input-name") as HTMLInputElement)
+            .value,
+          email: (
+            document.getElementById("swal-input-email") as HTMLInputElement
+          ).value,
+          password: (
+            document.getElementById("swal-input-password") as HTMLInputElement
+          ).value,
+        };
+      },
+    });
+
+    if (formValues) {
+      const updates: any = {};
+
+      if (formValues.name && formValues.name.trim() !== currentName) {
+        updates.data = { full_name: formValues.name };
+      }
+      if (formValues.email && formValues.email.trim() !== currentEmail) {
+        updates.email = formValues.email;
+      }
+      if (formValues.password && formValues.password.trim() !== "") {
+        updates.password = formValues.password;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser(updates);
+
+      if (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: error.message,
+          background: "#fffefc",
+          confirmButtonColor: "#F9C06A",
+        });
+      } else {
+        Swal.fire({
+          toast: true,
+          position: "bottom-end",
+          icon: "success",
+          title: updates.email
+            ? "Profile updated! Check your new email for confirmation."
+            : "Profile updated successfully!",
+          showConfirmButton: false,
+          timer: 4000,
+          timerProgressBar: true,
+          background: "#FFF9F1",
+          color: "#603809",
+          iconColor: "#F9C06A",
+        });
+
+        if (updates.data && profileNameEl) {
+          profileNameEl.innerText = formValues.name;
+          if (profileInitialEl)
+            profileInitialEl.innerText = formValues.name
+              .charAt(0)
+              .toUpperCase();
+        }
+        if (updates.email && profileEmailEl) {
+          profileEmailEl.innerText = formValues.email;
+        }
+      }
+    }
+  });
+
+  fetchProfile();
+</script>
