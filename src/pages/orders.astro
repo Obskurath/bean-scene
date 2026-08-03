@@ -1,0 +1,248 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+export const prerender = false;
+---
+
+<Layout title="My Orders - Bean Scene" solidHeader={true}>
+  <main class="max-w-4xl mx-auto px-4 py-12 pt-32">
+    <h1 class="text-3xl font-bold mb-8 text-gray-900">Order History</h1>
+
+    <!-- Panel de depuración (Si algo falla, te dirá EXACTAMENTE por qué en letras rojas) -->
+    <div
+      id="debug-panel"
+      class="hidden mb-6 p-4 bg-red-50 text-red-800 border border-red-200 rounded-md text-sm font-mono break-all"
+    >
+      <strong>Debug Log:</strong>
+      <span id="debug-message"></span>
+    </div>
+
+    <div
+      id="orders-loading"
+      class="text-center py-12 text-gray-500 font-medium animate-pulse"
+    >
+      Searching for session and loading orders...
+    </div>
+
+    <div id="orders-container" class="space-y-6 hidden">
+      <!-- Orders will be injected here -->
+    </div>
+
+    <div
+      id="no-orders"
+      class="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-sm hidden"
+    >
+      <p class="text-gray-600 mb-4">You haven't placed any orders yet.</p>
+      <a
+        href="/"
+        class="inline-block bg-amber-800 text-white px-6 py-2 rounded-md hover:bg-amber-900 transition-colors"
+      >
+        Explore Coffee
+      </a>
+    </div>
+
+    <div
+      id="auth-warning"
+      class="bg-amber-50 border border-amber-200 rounded-lg p-8 text-center shadow-sm hidden"
+    >
+      <p class="text-amber-800 mb-4 font-medium">
+        Please sign in to view your order history.
+      </p>
+      <a
+        href="/sign-in"
+        class="inline-block bg-amber-800 text-white px-6 py-2 rounded-md hover:bg-amber-900 transition-colors"
+      >
+        Sign In
+      </a>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+  const loadingEl = document.getElementById("orders-loading");
+  const containerEl = document.getElementById("orders-container");
+  const noOrdersEl = document.getElementById("no-orders");
+  const authWarningEl = document.getElementById("auth-warning");
+  const debugPanel = document.getElementById("debug-panel");
+  const debugMessage = document.getElementById("debug-message");
+
+  function logDebug(msg: string) {
+    if (debugPanel && debugMessage) {
+      debugPanel.classList.remove("hidden");
+      debugMessage.innerHTML += msg + "<br>";
+    }
+    console.error(msg);
+  }
+
+  // Sabueso: Busca el token sin importar dónde lo haya guardado tu sistema de login
+  async function huntForToken() {
+    // 1. Buscar en LocalStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes("-auth-token")) {
+        try {
+          const item = localStorage.getItem(key);
+          if (item) {
+            const parsed = JSON.parse(item);
+            if (parsed.access_token) return parsed.access_token;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // 2. Buscar en Cookies
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (
+        cookie.includes("access-token=") ||
+        cookie.includes("sb-access-token=")
+      ) {
+        return cookie.split("=")[1];
+      }
+      if (cookie.includes("-auth-token=")) {
+        try {
+          const val = decodeURIComponent(
+            cookie.substring(cookie.indexOf("=") + 1),
+          );
+          if (val.startsWith("{")) {
+            const parsed = JSON.parse(val);
+            if (parsed.access_token) return parsed.access_token;
+            if (parsed[0]) return parsed[0]; // Soporte para tokens en chunks
+          }
+        } catch (e) {}
+      }
+    }
+    return null;
+  }
+
+  // Extraer el ID del usuario directamente desencriptando el JWT
+  function parseJwt(token: string) {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        window
+          .atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function fetchOrders() {
+    try {
+      if (!supabaseUrl || !supabaseAnonKey) {
+        logDebug(
+          "Faltan variables de entorno PUBLIC_SUPABASE_URL o PUBLIC_SUPABASE_ANON_KEY.",
+        );
+        loadingEl?.remove();
+        return;
+      }
+
+      const token = await huntForToken();
+
+      if (!token) {
+        loadingEl?.remove();
+        authWarningEl?.classList.remove("hidden");
+        return;
+      }
+
+      const user = parseJwt(token);
+      if (!user || !user.sub) {
+        logDebug("El token encontrado no es válido o está corrupto.");
+        loadingEl?.remove();
+        authWarningEl?.classList.remove("hidden");
+        return;
+      }
+
+      // Petición REST directa a Supabase (Saltándose el cliente oficial)
+      const url = `${supabaseUrl}/rest/v1/orders?select=*,order_items(product_name,price,quantity)&user_id=eq.${user.sub}&order=created_at.desc`;
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        logDebug(
+          `Fallo al consultar la base de datos (${response.status}): ${errText}`,
+        );
+        loadingEl?.remove();
+        return;
+      }
+
+      const orders = await response.json();
+      loadingEl?.remove();
+
+      if (!orders || orders.length === 0) {
+        noOrdersEl?.classList.remove("hidden");
+        return;
+      }
+
+      containerEl?.classList.remove("hidden");
+      containerEl!.innerHTML = orders
+        .map(
+          (order: any) => `
+        <div class="border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-4 gap-2">
+            <div>
+              <p class="text-xs text-gray-500 uppercase tracking-wider">Order ID</p>
+              <p class="font-mono text-xs font-semibold text-gray-700">${order.id}</p>
+              <p class="text-xs text-gray-400 mt-1">
+                ${new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+              </p>
+            </div>
+            <div>
+              <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full uppercase">
+                ${order.status}
+              </span>
+            </div>
+          </div>
+
+          <div class="space-y-3 mb-4">
+            <h3 class="text-sm font-semibold text-gray-700">Items</h3>
+            <ul class="divide-y divide-gray-100">
+              ${order.order_items
+                .map(
+                  (item: any) => `
+                <li class="py-2 flex justify-between text-sm">
+                  <span class="text-gray-800">${item.quantity}x ${item.product_name}</span>
+                  <span class="font-medium text-gray-900">$${(item.price * item.quantity).toFixed(2)}</span>
+                </li>
+              `,
+                )
+                .join("")}
+            </ul>
+          </div>
+
+          <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-sm">
+            <span class="text-gray-500 font-medium">Total Amount</span>
+            <span class="text-lg font-bold text-gray-900">$${order.amount.toFixed(2)}</span>
+          </div>
+        </div>
+      `,
+        )
+        .join("");
+    } catch (e: any) {
+      loadingEl?.remove();
+      logDebug(`Error fatal en la ejecución: ${e.message}`);
+    }
+  }
+
+  fetchOrders();
+</script>
