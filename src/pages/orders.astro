@@ -313,39 +313,85 @@ export const prerender = false;
             <head>
               <title>Receipt - ${orderId}</title>
               <style>
-                body { font-family: monospace; padding: 20px; color: #333; max-width: 350px; margin: 0 auto; }
-                h2 { text-align: center; margin-bottom: 5px; font-size: 24px; }
+                @page {
+                  size: 80mm auto;
+                  margin: 0;
+                }
+                body {
+                  font-family: 'Courier New', Courier, monospace;
+                  width: 72mm;
+                  margin: 0 auto;
+                  padding: 8px;
+                  color: #000;
+                  background: #fff;
+                  font-size: 11px;
+                }
                 .text-center { text-align: center; }
-                .divider { border-top: 1px dashed #999; margin: 15px 0; }
-                .item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
-                .total { display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 15px; }
+                .logo {
+                  font-family: serif;
+                  font-size: 20px;
+                  font-weight: bold;
+                  letter-spacing: 1px;
+                  margin-bottom: 2px;
+                }
+                .divider {
+                  border-top: 1px dashed #000;
+                  margin: 6px 0;
+                }
+                .item {
+                  display: flex;
+                  justify-content: space-between;
+                  margin: 4px 0;
+                }
+                .total {
+                  display: flex;
+                  justify-content: space-between;
+                  font-weight: bold;
+                  font-size: 13px;
+                  margin-top: 6px;
+                  border-top: 1px solid #000;
+                  padding-top: 4px;
+                }
               </style>
             </head>
             <body>
-              <h2>Bean Scene</h2>
-              <p class="text-center" style="margin-top: 0; font-size: 12px; color: #666;">Coffee Experience</p>
+              <div class="text-center">
+                <div class="logo">Bean Scene</div>
+                <div style="font-size: 9px; color: #444;">Coffee Experience</div>
+              </div>
               <div class="divider"></div>
-              <p style="font-size: 12px;"><strong>Order:</strong> ${orderId}</p>
-              <p style="font-size: 12px;"><strong>Date:</strong> ${date}</p>
+              <div style="font-size: 9px;">
+                <div><strong>Order ID:</strong> ${orderId}</div>
+                <div><strong>Date:</strong> ${date}</div>
+              </div>
               <div class="divider"></div>
-              ${items
-                .map(
-                  (i: any) => `
-                <div class="item">
-                  <span>${i.quantity}x ${i.product_name}</span>
-                  <span>$${(i.price * i.quantity).toFixed(2)}</span>
-                </div>
-              `,
-                )
-                .join("")}
+              <div>
+                ${items
+                  .map(
+                    (i: any) => `
+                  <div class="item">
+                    <span>${i.quantity}x ${i.product_name}</span>
+                    <span>$${(i.price * i.quantity).toFixed(2)}</span>
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
               <div class="divider"></div>
               <div class="total">
                 <span>TOTAL</span>
                 <span>$${total}</span>
               </div>
-              <p class="text-center" style="margin-top: 30px; font-size: 12px;">Thank you for your purchase!</p>
+              <div class="divider"></div>
+              <div class="text-center" style="font-size: 9px; margin-top: 8px;">
+                Thank you for your purchase!<br>
+                Please come again.
+              </div>
               <script>
-                window.onload = function() { window.print(); window.close(); }
+                window.onload = function() { 
+                  window.print(); 
+                  setTimeout(() => window.close(), 500);
+                }
               <\/script>
             </body>
           </html>
@@ -393,7 +439,7 @@ export const prerender = false;
             title: "Coffee is brewing!",
             text: "Items added to your cart.",
             showConfirmButton: false,
-            timer: 3000,
+            timer: 1500,
             timerProgressBar: true,
             background: "#FFF9F1",
             color: "#603809",
