@@ -17,10 +17,10 @@ const {
   title = "Bean Scene",
   href = "/",
   links = [
-    { href: "#Home", label: "Home" },
-    { href: "#Discover", label: "Discover" },
-    { href: "#Menu", label: "Menu" },
-    { href: "#About", label: "About Us" },
+    { href: "/", label: "Home" },
+    { href: "/#Discover", label: "Discover" },
+    { href: "/#Menu", label: "Menu" },
+    { href: "/#About", label: "About Us" },
   ],
   class: className = "",
 } = Astro.props as Props;
@@ -65,7 +65,7 @@ const {
         id="open-cart-drawer-btn"
         type="button"
         style="display: none;"
-        class="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F9C06A]/20 text-[#603809] border border-[#F9C06A]/40 transition-all duration-300 hover:bg-[#F9C06A]/30 cursor-pointer shadow-sm"
+        class="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F9C06A]/20 text-(--filler-color) border border-[#F9C06A]/40 transition-all duration-300 hover:bg-[#F9C06A]/30 cursor-pointer shadow-sm"
         aria-label="Shopping Cart"
       >
         <svg
@@ -83,7 +83,7 @@ const {
         </svg>
         <span
           id="header-cart-badge"
-          class="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full btn-color px-1 text-[10px] font-bold text-[#603809] shadow-md border-2 border-white hidden font-heading"
+          class="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full btn-color px-1 text-[10px] font-bold text-(--filler-color) shadow-md border-2 border-white hidden font-heading"
           >0</span
         >
       </button>

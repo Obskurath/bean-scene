@@ -7,10 +7,9 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   hideHeaderFooter?: boolean;
-  solidHeader?: boolean; // 1. Agregamos la propiedad
+  solidHeader?: boolean;
 }
 
-// 2. Extraemos la propiedad con valor por defecto "false"
 const {
   title = "Bean Scene",
   hideHeaderFooter = false,
@@ -29,8 +28,8 @@ const shouldHideHeaderFooter =
     <link rel="icon" href="/icon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <meta name="color-scheme" content="light" />
   </head>
-  <!-- 3. Aplicamos la clase si solidHeader es true -->
   <body class={solidHeader ? "force-solid-header" : ""}>
     {shouldHideHeaderFooter ? null : <Header />}
     <slot />
@@ -40,22 +39,18 @@ const shouldHideHeaderFooter =
   </body>
 </html>
 
-<!-- Forzamos el diseño sólido usando las variables exactas de tu Header.astro -->
 <style is:global>
-  /* 1. Fondo del Header: Color crema (--filler-color) */
   body.force-solid-header #site-header {
     background-color: var(--filler-color) !important;
     box-shadow: 0 4px 15px -3px rgb(0 0 0 / 0.05) !important;
   }
 
-  /* 2. Color del texto a café oscuro (--header-color) para el logo, links y carrito */
   body.force-solid-header #header-logo,
   body.force-solid-header .nav-link,
   body.force-solid-header #open-cart-drawer-btn {
     color: var(--header-color) !important;
   }
 
-  /* 3. Color Hover (Naranja) para los links y el carrito */
   body.force-solid-header .nav-link:hover,
   body.force-solid-header #open-cart-drawer-btn:hover {
     color: var(--btn-color) !important;
