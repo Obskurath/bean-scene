@@ -56,6 +56,9 @@ export const prerender = false;
 </Layout>
 
 <script>
+  import Swal from "sweetalert2";
+  import { addToCart } from "../store/cartStore";
+
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
@@ -136,7 +139,7 @@ export const prerender = false;
     try {
       if (!supabaseUrl || !supabaseAnonKey) {
         logDebug(
-          "Faltan variables de entorno PUBLIC_SUPABASE_URL o PUBLIC_SUPABASE_ANON_KEY.",
+          "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY environment variables.",
         );
         loadingEl?.remove();
         return;
@@ -152,33 +155,52 @@ export const prerender = false;
 
       const user = parseJwt(token);
       if (!user || !user.sub) {
-        logDebug("El token encontrado no es válido o está corrupto.");
+        logDebug("The found token is invalid or corrupted.");
         loadingEl?.remove();
         authWarningEl?.classList.remove("hidden");
         return;
       }
 
-      const url = `${supabaseUrl}/rest/v1/orders?select=*,order_items(product_name,price,quantity)&user_id=eq.${user.sub}&order=created_at.desc`;
+      const ordersUrl = `${supabaseUrl}/rest/v1/orders?select=*,order_items(product_id,product_name,price,quantity)&user_id=eq.${user.sub}&order=created_at.desc`;
+      const productsUrl = `${supabaseUrl}/rest/v1/products?select=id,nombre,imagen_url`;
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          apikey: supabaseAnonKey,
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const [ordersRes, productsRes] = await Promise.all([
+        fetch(ordersUrl, {
+          method: "GET",
+          headers: {
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }),
+        fetch(productsUrl, {
+          method: "GET",
+          headers: {
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }),
+      ]);
 
-      if (!response.ok) {
-        const errText = await response.text();
-        logDebug(
-          `Fallo al consultar la base de datos (${response.status}): ${errText}`,
-        );
+      if (!ordersRes.ok) {
+        const errText = await ordersRes.text();
+        logDebug(`Database query failed (${ordersRes.status}): ${errText}`);
         loadingEl?.remove();
         return;
       }
 
-      const orders = await response.json();
+      const orders = await ordersRes.json();
+      const products = productsRes.ok ? await productsRes.json() : [];
+
+      const imageMap: Record<string, string> = {};
+      const idMap: Record<string, string> = {};
+
+      products.forEach((p: any) => {
+        imageMap[p.nombre] = p.imagen_url;
+        idMap[p.nombre] = p.id;
+      });
+
       loadingEl?.remove();
 
       if (!orders || orders.length === 0) {
@@ -188,53 +210,207 @@ export const prerender = false;
 
       containerEl?.classList.remove("hidden");
       containerEl!.innerHTML = orders
-        .map(
-          (order: any) => `
-        <div class="border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-4 gap-2">
-            <div>
-              <p class="text-xs text-gray-500 uppercase tracking-wider">Order ID</p>
-              <p class="font-mono text-xs font-semibold text-gray-700">${order.id}</p>
-              <p class="text-xs text-gray-400 mt-1">
-                ${new Date(order.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-              </p>
-            </div>
-            <div>
-              <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full uppercase">
-                ${order.status}
-              </span>
-            </div>
-          </div>
+        .map((order: any) => {
+          const enrichedItems = order.order_items.map((item: any) => ({
+            ...item,
+            product_id:
+              item.product_id || idMap[item.product_name] || item.product_name,
+            imagen_url: imageMap[item.product_name] || "/icon.svg",
+          }));
 
-          <div class="space-y-3 mb-4">
-            <h3 class="text-sm font-semibold text-gray-700">Items</h3>
-            <ul class="divide-y divide-gray-100">
-              ${order.order_items
-                .map(
-                  (item: any) => `
-                <li class="py-2 flex justify-between text-sm">
-                  <span class="text-gray-800">${item.quantity}x ${item.product_name}</span>
-                  <span class="font-medium text-gray-900">$${(item.price * item.quantity).toFixed(2)}</span>
-                </li>
-              `,
-                )
-                .join("")}
-            </ul>
-          </div>
+          const itemsJson = JSON.stringify(enrichedItems).replace(
+            /"/g,
+            "&quot;",
+          );
+          const formattedDate = new Date(order.created_at).toLocaleDateString(
+            "en-US",
+            {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            },
+          );
 
-          <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-sm">
-            <span class="text-gray-500 font-medium">Total Amount</span>
-            <span class="text-lg font-bold text-gray-900">$${order.amount.toFixed(2)}</span>
-          </div>
-        </div>
-      `,
-        )
+          return `
+            <div class="border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b pb-4 gap-2">
+                <div>
+                  <p class="text-xs text-gray-500 uppercase tracking-wider">Order ID</p>
+                  <p class="font-mono text-xs font-semibold text-gray-700">${order.id}</p>
+                  <p class="text-xs text-gray-400 mt-1">${formattedDate}</p>
+                </div>
+                <div>
+                  <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full uppercase">
+                    ${order.status}
+                  </span>
+                </div>
+              </div>
+
+              <div class="space-y-3 mb-4">
+                <h3 class="text-sm font-semibold text-gray-700">Items</h3>
+                <ul class="divide-y divide-gray-100">
+                  ${enrichedItems
+                    .map(
+                      (item: any) => `
+                    <li class="py-2 flex items-center justify-between text-sm">
+                      <div class="flex items-center gap-3">
+                        <img src="${item.imagen_url}" alt="${item.product_name}" class="w-10 h-10 object-cover rounded-md border border-gray-200" />
+                        <span class="text-gray-800 font-medium">${item.quantity}x ${item.product_name}</span>
+                      </div>
+                      <span class="font-medium text-gray-900">$${(item.price * item.quantity).toFixed(2)}</span>
+                    </li>
+                  `,
+                    )
+                    .join("")}
+                </ul>
+              </div>
+
+              <div class="flex justify-between items-center pt-3 border-t border-gray-100 text-sm">
+                <span class="text-gray-500 font-medium">Total Amount</span>
+                <span class="text-lg font-bold text-gray-900">$${order.amount.toFixed(2)}</span>
+              </div>
+
+              <div class="flex flex-wrap justify-end gap-3 pt-5 mt-3 border-t border-dashed border-gray-200">
+                <button data-action="print" data-order-id="${order.id}" data-date="${formattedDate}" data-total="${order.amount.toFixed(2)}" data-items="${itemsJson}" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Receipt
+                </button>
+                <button data-action="reorder" data-items="${itemsJson}" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#F9C06A] text-[#603809] rounded-lg text-sm font-bold hover:brightness-105 transition-all cursor-pointer shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Reorder
+                </button>
+              </div>
+            </div>
+          `;
+        })
         .join("");
     } catch (e: any) {
       loadingEl?.remove();
-      logDebug(`Error fatal en la ejecución: ${e.message}`);
+      logDebug(`Fatal execution error: ${e.message}`);
     }
   }
+
+  containerEl?.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest("button");
+    if (!btn) return;
+
+    if (btn.dataset.action === "print") {
+      const orderId = btn.dataset.orderId;
+      const date = btn.dataset.date;
+      const total = btn.dataset.total;
+      const items = JSON.parse(btn.dataset.items || "[]");
+
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Receipt - ${orderId}</title>
+              <style>
+                body { font-family: monospace; padding: 20px; color: #333; max-width: 350px; margin: 0 auto; }
+                h2 { text-align: center; margin-bottom: 5px; font-size: 24px; }
+                .text-center { text-align: center; }
+                .divider { border-top: 1px dashed #999; margin: 15px 0; }
+                .item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
+                .total { display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 15px; }
+              </style>
+            </head>
+            <body>
+              <h2>Bean Scene</h2>
+              <p class="text-center" style="margin-top: 0; font-size: 12px; color: #666;">Coffee Experience</p>
+              <div class="divider"></div>
+              <p style="font-size: 12px;"><strong>Order:</strong> ${orderId}</p>
+              <p style="font-size: 12px;"><strong>Date:</strong> ${date}</p>
+              <div class="divider"></div>
+              ${items
+                .map(
+                  (i: any) => `
+                <div class="item">
+                  <span>${i.quantity}x ${i.product_name}</span>
+                  <span>$${(i.price * i.quantity).toFixed(2)}</span>
+                </div>
+              `,
+                )
+                .join("")}
+              <div class="divider"></div>
+              <div class="total">
+                <span>TOTAL</span>
+                <span>$${total}</span>
+              </div>
+              <p class="text-center" style="margin-top: 30px; font-size: 12px;">Thank you for your purchase!</p>
+              <script>
+                window.onload = function() { window.print(); window.close(); }
+              <\/script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    }
+
+    if (btn.dataset.action === "reorder") {
+      const items = JSON.parse(btn.dataset.items || "[]");
+
+      Swal.fire({
+        title: "Reorder?",
+        html: `<p style="font-family: var(--font-heading); color: var(--text-color);">Do you want to add <b>${items.length} items</b> to your cart?</p>`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#F9C06A",
+        cancelButtonColor: "#e5e7eb",
+        confirmButtonText:
+          '<span style="color: #603809; font-weight: bold; font-family: var(--font-heading);">Yes, add to cart</span>',
+        cancelButtonText:
+          '<span style="color: #707070; font-family: var(--font-heading);">Cancel</span>',
+        background: "#fffefc",
+        customClass: {
+          title: "font-heading",
+          popup: "rounded-xl shadow-xl border border-[#F9C06A]/20",
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          items.forEach((item: any) => {
+            for (let i = 0; i < item.quantity; i++) {
+              addToCart({
+                id: item.product_id,
+                name: item.product_name,
+                price: item.price,
+                image: item.imagen_url,
+              });
+            }
+          });
+
+          Swal.fire({
+            toast: true,
+            position: "bottom-end",
+            icon: "success",
+            title: "Coffee is brewing!",
+            text: "Items added to your cart.",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            background: "#FFF9F1",
+            color: "#603809",
+            iconColor: "#F9C06A",
+            customClass: {
+              title: "font-heading font-bold",
+              popup: "border border-[#F9C06A]",
+            },
+          });
+
+          if (typeof (window as any).openCartDrawer === "function") {
+            (window as any).openCartDrawer();
+          }
+        }
+      });
+    }
+  });
 
   fetchOrders();
 </script>
